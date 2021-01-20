@@ -56,8 +56,11 @@ class DataSource:
 
     @property
     def messages_per_second(self) -> float:
-        time_diff = self.last_timestamp - self._first_timestamp
-        return self._processed_messages / time_diff.total_seconds()
+        try:
+            time_diff = self.last_timestamp - self._first_timestamp
+            return self._processed_messages / time_diff.total_seconds()
+        except ZeroDivisionError:
+            return 0.0
 
     @property
     def last_message(self):
