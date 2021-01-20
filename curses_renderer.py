@@ -1,11 +1,24 @@
 import curses
-from datetime import datetime
-from math import ceil, floor
 from list_generator import generate_list
+from typing import Union, Dict, List, Optional
+from wherefore.DataSource import DataSource
+from datetime import datetime, timezone
 
 DEBUG = True
 DEFAULT_LIST_ROWS = 10
 DEFAULT_LIST_WIDTH = 80
+
+
+def time_to_str(timestamp: Optional[datetime]):
+    if timestamp is None:
+        return "n/a"
+    return timestamp.strftime("%Y-%m-%d %H:%M:%S.%f %Z")
+
+
+def get_time_diff(time1, time2):
+    if time1 is None or time2 is None:
+        return "n/a"
+    return f"{(time1 - time2).total_seconds():8.2f}"
 
 
 def draw_full_line(window, row, text, invert=False):
@@ -33,9 +46,7 @@ class CursesRenderer:
         self.screen.keypad(1)
         self.screen.timeout(0)
         self.selected_item = 0
-        self.known_sources = []
-        for i in range(15):
-            self.known_sources.append(["abcd", f"Name {i}", str(datetime.now())])
+        self.known_sources: List[DataSource] = []
 
     def __del__(self):
         if not DEBUG:
@@ -44,10 +55,18 @@ class CursesRenderer:
             curses.echo()
             curses.endwin()
 
+    def set_data(self, data: Union[Dict, List]):
+        if type(data) is dict:
+            self.known_sources = list(data.values())
+        elif type(data) is list:
+            self.known_sources = data
+        else:
+            raise RuntimeError("Can not set data of type: " + str(type(data)))
+
     def draw_sources_list(self):
         height, width = self.screen.getmaxyx()
         used_width = DEFAULT_LIST_WIDTH
-        prototype_line = "{:^6.6s}| {:44.44s}| {:26.26s}"
+        prototype_line = "{:^6.6s}| {:40.40s}| {:30.30s}"
         draw_full_line(self.screen, 1, prototype_line.format("Id", " Name", " Last timestamp"))
         self.screen.addstr(2, 0, "-" * used_width)
         if width < used_width:
@@ -66,11 +85,33 @@ class CursesRenderer:
             if type(item) is str:
                 draw_full_line(sources_win, i, "  " + item*3)
             else:
-                draw_full_line(sources_win, i, prototype_line.format(item[0], item[1], item[2]), selected)
+                draw_full_line(sources_win, i, prototype_line.format(item.source_type, item.source_name, time_to_str(item.last_timestamp)), selected)
         sources_win.refresh()
 
     def draw_selected_source_info(self):
         height, width = self.screen.getmaxyx()
+        if self.selected_item < 0:
+            return
+        current_source = self.known_sources[self.selected_item]
+        current_message = current_source.last_message
+        now = datetime.now(tz=timezone.utc)
+        info_rows = []
+        timestamp_format = "{:20.20s} | {:30.30s} | {:10.10s}"
+
+        info_rows.append("")
+        first_ts_string = time_to_str(current_source.first_timestamp)
+        info_rows.append(f"  First offset: {current_source.first_offset:>10d}    First timestamp: {first_ts_string}")
+        info_rows.append(f"Current offset: {current_message.offset:>10d}    Message rate: {current_source.messages_per_second:.3f}/s")
+        info_rows.append(
+            f"                              Received messages: {current_source.processed_messages:d}")
+        info_rows.append("")
+        info_rows.append(timestamp_format.format("Type", "Timestamp", "Age (s)"))
+        info_rows.append("-"*80)
+        info_rows.append(timestamp_format.format("Receive time", time_to_str(current_message.local_timestamp), get_time_diff(now, current_message.local_timestamp)))
+        info_rows.append(timestamp_format.format("Message time", time_to_str(current_message.timestamp),
+                                                 get_time_diff(now, current_message.timestamp)))
+        info_rows.append(timestamp_format.format("Kafka time", time_to_str(current_message.kafka_timestamp),
+                                                 get_time_diff(now, current_message.kafka_timestamp)))
         if height > DEFAULT_LIST_ROWS + 3:
             self.screen.addstr(13, 0, "-" * DEFAULT_LIST_WIDTH)
         remaining_height = height - 14
@@ -78,7 +119,9 @@ class CursesRenderer:
             return
         source_info_win = curses.newwin(remaining_height, width, 14, 0)
         for i in range(remaining_height):
-            draw_full_line(source_info_win, i, f"Line number {i + 1}")
+            if i == len(info_rows):
+                break
+            draw_full_line(source_info_win, i, info_rows[i])
         source_info_win.refresh()
 
     def handle_key_press(self):
@@ -95,7 +138,7 @@ class CursesRenderer:
     def draw(self):
         self.handle_key_press()
         height, width = self.screen.getmaxyx()
-        header_line = f"Min. offset: 12432542    Max offset: 456786476    Msg/s: 12.5"
+        header_line = f"(Placeholder)"
         draw_full_line(self.screen, 0, header_line)
         self.draw_sources_list()
         self.draw_selected_source_info()

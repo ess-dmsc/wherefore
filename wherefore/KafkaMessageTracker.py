@@ -1,15 +1,16 @@
 from threading import Thread
 from typing import Union, Dict
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum, auto
 from kafka import KafkaConsumer, TopicPartition
-from queue import Queue
+from queue import Queue, Empty, Full
 from wherefore.DataSource import DataSource
 from wherefore.Message import Message
 from copy import copy
 
 
 CHECK_FOR_MSG_INTERVAL = 500
+UPDATE_STATUS_INTERVAL = timedelta(milliseconds=50)
 
 
 class PartitionOffset(Enum):
@@ -21,13 +22,21 @@ class PartitionOffset(Enum):
 def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queue: Queue, out_queue: Queue):
     known_sources: Dict[bytes, DataSource] = {}
     start_time = datetime.now()
+    update_timer = datetime.now()
     while True:
         messages_ctr = 0
         for kafka_msg in consumer:
             new_msg = Message(kafka_msg)
-            if not new_msg.source_hash in known_sources:
-                known_sources[new_msg.source_hash] = DataSource(new_msg.source_name, new_msg.message_type, start_time)
-            known_sources[new_msg.source_hash].process_message(new_msg)
+            if type(stop) is int and new_msg.offset > stop:
+                pass
+            elif type(stop) is datetime and new_msg.timestamp is not None and new_msg.timestamp > stop:
+                pass
+            elif type(stop) is datetime and new_msg.timestamp is None and new_msg.kafka_timestamp > stop:
+                pass
+            else:
+                if not new_msg.source_hash in known_sources:
+                    known_sources[new_msg.source_hash] = DataSource(new_msg.source_name, new_msg.message_type, start_time)
+                known_sources[new_msg.source_hash].process_message(new_msg)
             messages_ctr += 1
             if messages_ctr == CHECK_FOR_MSG_INTERVAL:
                 break
@@ -35,8 +44,12 @@ def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queu
             new_msg = in_queue.get()
             if new_msg == "exit":
                 break
-            elif new_msg == "get_update":
-                out_queue.put(copy(known_sources))
+        if datetime.now() - update_timer > UPDATE_STATUS_INTERVAL:
+            update_timer = datetime.now()
+            try:
+                out_queue.put(copy(known_sources), block=False)
+            except Full:
+                pass  # Do nothing
     consumer.close(True)
 
 
@@ -58,18 +71,28 @@ class KafkaMessageTracker:
         elif start == PartitionOffset.END or start == PartitionOffset.NEVER:
             consumer.seek_to_end()
         elif type(start) is int:
-            consumer.seek(partitions=topic_partition, offset=start)
+            first_offset = consumer.beginning_offsets([topic_partition, ])
+            if first_offset[topic_partition] > start:
+                consumer.seek_to_beginning()
+            else:
+                consumer.seek(partition=topic_partition, offset=start)
         elif type(start) is datetime:
-            found_offsets = consumer.offsets_for_times({topic: int(start.timestamp() * 1000)})
-            consumer.seek(partition=topic_partition, offset=found_offsets[topic])
+            found_offsets = consumer.offsets_for_times({topic_partition: int(start.timestamp() * 1000)})
+            consumer.seek(partition=topic_partition, offset=found_offsets[topic_partition].offset)
         self.to_thread = Queue()
-        self.from_thread = Queue()
-        self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer":consumer, "stop":stop, "in_queue":self.to_thread, "out_queue":self.from_thread})
+        self.from_thread = Queue(maxsize=100)
+        self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer":consumer, "stop":stop, "in_queue":self.to_thread, "out_queue":self.from_thread, "stop":stop})
         self.thread.start()
 
     def get_latest_values(self):
-        self.to_thread.put("get_update")
-        return self.from_thread.get(block=True)
+        current_msg = None
+        while not self.from_thread.empty():
+            try:
+                current_msg = self.from_thread.get(block=False)
+            except Empty:
+                return None
+        return current_msg
+
 
 
 

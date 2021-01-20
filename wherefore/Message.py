@@ -1,28 +1,28 @@
 from streaming_data_types.utils import get_schema
 from streaming_data_types import deserialise_ev42,deserialise_hs00, deserialise_wrdn, deserialise_f142, deserialise_ns10, deserialise_pl72, deserialise_6s4t, deserialise_x5f2, deserialise_ep00, deserialise_tdct, deserialise_rf5k, deserialise_answ, deserialise_ndar
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Tuple
 import hashlib
 
 
 def ev42_extractor(data: bytes):
     extracted = deserialise_ev42(data)
-    return extracted.source_name, datetime.fromtimestamp(extracted.pulse_time / 1e9)
+    return extracted.source_name, datetime.fromtimestamp(extracted.pulse_time / 1e9, tz=timezone.utc)
 
 
 def hs00_extractor(data: bytes):
     extracted = deserialise_hs00(data)
-    return extracted.source, datetime.fromtimestamp(extracted.timestamp / 1e9)
+    return extracted.source, datetime.fromtimestamp(extracted.timestamp / 1e9, tz=timezone.utc)
 
 
 def f142_extractor(data: bytes):
     extracted = deserialise_f142(data)
-    return extracted.source_name, datetime.fromtimestamp(extracted.timestamp_unix_ns / 1e9)
+    return extracted.source_name, datetime.fromtimestamp(extracted.timestamp_unix_ns / 1e9, tz=timezone.utc)
 
 
 def ns10_extractor(data: bytes):
     extracted = deserialise_ns10(data)
-    return extracted.key, datetime.fromtimestamp(extracted.time_stamp)
+    return extracted.key, datetime.fromtimestamp(extracted.time_stamp, tz=timezone.utc)
 
 
 def pl72_extractor(data: bytes):
@@ -42,12 +42,12 @@ def x5f2_extractor(data: bytes):
 
 def ep00_extractor(data: bytes):
     extracted = deserialise_ep00(data)
-    return extracted.source_name, datetime.fromtimestamp(extracted.timestamp / 1e9)
+    return extracted.source_name, datetime.fromtimestamp(extracted.timestamp / 1e9, tz=timezone.utc)
 
 
 def tdct_extractor(data: bytes):
     extracted = deserialise_tdct(data)
-    return extracted.name, datetime.fromtimestamp(extracted.timestamps[0] / 1e9)
+    return extracted.name, datetime.fromtimestamp(extracted.timestamps[0] / 1e9, tz=timezone.utc)
 
 
 def rf5k_extractor(data: bytes):
@@ -96,14 +96,15 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime]:
 
 class Message:
     def __init__(self, kafka_msg):
-        self.local_time = datetime.now()
+        self._local_time = datetime.now(tz=timezone.utc)
         self._message_type, self._source_name, self._message_time = extract_message_info(kafka_msg.value)
         hash_generator = hashlib.sha256()
         hash_generator.update(self._source_name.encode())
         hash_generator.update(self._message_type.encode())
         self._source_hash = hash_generator.digest()
-        self._kafka_time = datetime.fromtimestamp(kafka_msg.timestamp / 1e3)
+        self._kafka_time = datetime.fromtimestamp(kafka_msg.timestamp / 1e3, tz=timezone.utc)
         self._value = kafka_msg.value
+        self._offset = kafka_msg.offset
 
     @property
     def source_hash(self) -> bytes:
@@ -116,4 +117,20 @@ class Message:
     @property
     def message_type(self) -> str:
         return self._message_type
+
+    @property
+    def local_timestamp(self) -> datetime:
+        return self._local_time
+
+    @property
+    def timestamp(self) -> datetime:
+        return self._message_time
+
+    @property
+    def kafka_timestamp(self) -> datetime:
+        return self._kafka_time
+
+    @property
+    def offset(self):
+        return self._offset
 
