@@ -101,9 +101,9 @@ class CursesRenderer:
         info_rows.append("")
         first_ts_string = time_to_str(current_source.first_timestamp)
         info_rows.append(f"  First offset: {current_source.first_offset:>10d}    First timestamp: {first_ts_string}")
-        info_rows.append(f"Current offset: {current_message.offset:>10d}    Message rate: {current_source.messages_per_second:.3f}/s")
+        info_rows.append(f"Current offset: {current_message.offset:>10d}    Consumption rate: {current_source.processed_per_second:.3f}/s")
         info_rows.append(
-            f"                              Received messages: {current_source.processed_messages:d}")
+            f"Received messages: {current_source.processed_messages:7d}    Message rate: {current_source.messages_per_second:12.3f}/s")
         info_rows.append("")
         info_rows.append(timestamp_format.format("Type", "Timestamp", "Age (s)"))
         info_rows.append("-"*80)

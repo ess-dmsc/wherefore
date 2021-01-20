@@ -50,8 +50,13 @@ class DataSource:
         return self._processed_messages
 
     @property
-    def messages_per_second(self) -> float:
+    def processed_per_second(self) -> float:
         time_diff = datetime.now() - self._start_time
+        return self._processed_messages / time_diff.total_seconds()
+
+    @property
+    def messages_per_second(self) -> float:
+        time_diff = self.last_timestamp - self._first_timestamp
         return self._processed_messages / time_diff.total_seconds()
 
     @property
