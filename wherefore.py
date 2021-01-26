@@ -8,13 +8,16 @@ from datetime import datetime, timezone
 
 def extract_point(point: str):
     if match := re.match("(?P<timestamp>\d+)s$", point):
-        return datetime.fromtimestamp(int(match["timestamp"]))
+        return datetime.fromtimestamp(int(match["timestamp"]), tz=timezone.utc)
     if match := re.match("(?P<offset_str>(?:never)|(?:end)|(?:beginning))$", point):
         return {"end": PartitionOffset.END, "beginning": PartitionOffset.BEGINNING, "never": PartitionOffset.NEVER}[match["offset_str"]]
     if match := re.match("(?P<offset>\d+)$", point):
         return int(match["offset"])
     try:
-        return datetime.fromisoformat(point)
+        time_point = datetime.fromisoformat(point)
+        if time_point.tzinfo is None:
+            time_point = time_point.replace(tzinfo=timezone.utc)
+        return time_point
     except ValueError:
         raise RuntimeError(f"Unable to convert timestamp, offset, or offset string from the argument: {point}")
 
@@ -46,7 +49,7 @@ def main(broker: str, topic: str, partition: int, start: str, end: str):
                     msg_offset = source.last_message.offset
                     if msg_offset > max_current_offset:
                         max_current_offset = msg_offset
-                current_offsets.lag = current_offsets.high - max_current_offset
+                current_offsets.lag = current_offsets.high - max_current_offset - 1
                 if latest_update is not None:
                     renderer.set_data(latest_update)
                     renderer.set_partition_offsets(current_offsets)

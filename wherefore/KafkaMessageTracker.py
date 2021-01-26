@@ -1,6 +1,6 @@
 from threading import Thread
 from typing import Union, Dict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
 from kafka import KafkaConsumer, TopicPartition
 from queue import Queue, Empty, Full
@@ -28,8 +28,8 @@ class HighLowOffset:
 
 def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queue: Queue, out_queue: Queue, topic_partition):
     known_sources: Dict[bytes, DataSource] = {}
-    start_time = datetime.now()
-    update_timer = datetime.now()
+    start_time = datetime.now(tz=timezone.utc)
+    update_timer = datetime.now(tz=timezone.utc)
     while True:
         messages_ctr = 0
         for kafka_msg in consumer:
@@ -51,8 +51,9 @@ def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queu
             new_msg = in_queue.get()
             if new_msg == "exit":
                 break
-        if datetime.now() - update_timer > UPDATE_STATUS_INTERVAL:
-            update_timer = datetime.now()
+        now = datetime.now(tz=timezone.utc)
+        if now - update_timer > UPDATE_STATUS_INTERVAL:
+            update_timer = now
             try:
                 out_queue.put(copy(known_sources), block=False)
                 low_offset = consumer.beginning_offsets([topic_partition, ])[topic_partition]

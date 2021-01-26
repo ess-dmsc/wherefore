@@ -1,5 +1,5 @@
 from wherefore.Message import Message
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 
@@ -51,7 +51,7 @@ class DataSource:
 
     @property
     def processed_per_second(self) -> float:
-        time_diff = datetime.now() - self._start_time
+        time_diff = datetime.now(tz=timezone.utc) - self._start_time
         return self._processed_messages / time_diff.total_seconds()
 
     @property
