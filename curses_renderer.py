@@ -3,9 +3,10 @@ from list_generator import generate_list
 from typing import Union, Dict, List, Optional
 from wherefore.DataSource import DataSource
 from datetime import datetime, timezone
+from wherefore.KafkaMessageTracker import HighLowOffset
 
 DEBUG = False
-DEFAULT_LIST_ROWS = 10
+DEFAULT_LIST_ROWS = 9
 DEFAULT_LIST_WIDTH = 80
 
 
@@ -39,7 +40,9 @@ def draw_full_line(window, row, text, invert=False):
 
 
 class CursesRenderer:
-    def __init__(self):
+    def __init__(self, topic_name, partition):
+        self.topic_name = topic_name
+        self.partition = partition
         self.screen = curses.initscr()
         curses.noecho()
         curses.cbreak()
@@ -47,6 +50,7 @@ class CursesRenderer:
         self.screen.keypad(1)
         self.screen.timeout(0)
         self.selected_item = 0
+        self.current_offsets = HighLowOffset(-1, -1)
         self.known_sources: List[DataSource] = []
 
     def __del__(self):
@@ -65,18 +69,21 @@ class CursesRenderer:
         else:
             raise RuntimeError("Can not set data of type: " + str(type(data)))
 
+    def set_partition_offsets(self, current_offsets: HighLowOffset):
+        self.current_offsets = current_offsets
+
     def draw_sources_list(self):
         height, width = self.screen.getmaxyx()
         used_width = DEFAULT_LIST_WIDTH
         prototype_line = "{:^6.6s}| {:40.40s}| {:30.30s}"
-        draw_full_line(self.screen, 1, prototype_line.format("Id", "Name", "Last timestamp"))
-        self.screen.addstr(2, 0, "-" * used_width)
+        draw_full_line(self.screen, 2, prototype_line.format("Id", "Name", "Last timestamp"))
+        self.screen.addstr(3, 0, "-" * used_width)
         if width < used_width:
             used_width = width
         used_height = DEFAULT_LIST_ROWS
         if used_height + 3 > height:
             used_height = height - 3
-        sources_win = curses.newwin(used_height, used_width, 3, 0)
+        sources_win = curses.newwin(used_height, used_width, 4, 0)
         win_height, win_width = sources_win.getmaxyx()
         available_rows = win_height
         sources_to_list, selection_row = generate_list(self.known_sources, available_rows, self.selected_item)
@@ -140,8 +147,10 @@ class CursesRenderer:
     def draw(self):
         self.handle_key_press()
         height, width = self.screen.getmaxyx()
-        header_line = f"(Placeholder)"
+        header_line = f"Topic: {self.topic_name}, Partition#: {self.partition}"
+        header_line2 = f"Low offset: {self.current_offsets.low}  High offset: {self.current_offsets.high}  Lag: {self.current_offsets.lag}"
         draw_full_line(self.screen, 0, header_line)
+        draw_full_line(self.screen, 1, header_line2)
         self.draw_sources_list()
         self.draw_selected_source_info()
         self.screen.refresh()

@@ -19,7 +19,14 @@ class PartitionOffset(Enum):
     END = auto()
 
 
-def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queue: Queue, out_queue: Queue):
+class HighLowOffset:
+    def __init__(self, low, high, lag = -1):
+        self.low = low
+        self.lag = lag
+        self.high = high
+
+
+def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queue: Queue, out_queue: Queue, topic_partition):
     known_sources: Dict[bytes, DataSource] = {}
     start_time = datetime.now()
     update_timer = datetime.now()
@@ -48,6 +55,9 @@ def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queu
             update_timer = datetime.now()
             try:
                 out_queue.put(copy(known_sources), block=False)
+                low_offset = consumer.beginning_offsets([topic_partition, ])[topic_partition]
+                high_offset = consumer.end_offsets([topic_partition, ])[topic_partition]
+                out_queue.put(HighLowOffset(low_offset, high_offset))
             except Full:
                 pass  # Do nothing
     consumer.close(True)
@@ -57,6 +67,8 @@ class KafkaMessageTracker:
     def __init__(self, broker: str, topic: str, partition: int = -1, start: Union[int, datetime, PartitionOffset] = PartitionOffset.END, stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER):
         consumer = KafkaConsumer(bootstrap_servers=broker, fetch_max_bytes=52428800 * 6, consumer_timeout_ms=100)
         existing_topics = consumer.topics()
+        self.current_msg = None
+        self.current_offset_limits = HighLowOffset(-1, -1)
         if topic not in existing_topics:
             raise RuntimeError(f"Topic \"{topic}\" does not exist.")
         existing_partitions = consumer.partitions_for_topic(topic)
@@ -81,18 +93,27 @@ class KafkaMessageTracker:
             consumer.seek(partition=topic_partition, offset=found_offsets[topic_partition].offset)
         self.to_thread = Queue()
         self.from_thread = Queue(maxsize=100)
-        self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer":consumer, "stop":stop, "in_queue":self.to_thread, "out_queue":self.from_thread, "stop":stop})
+        self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer":consumer, "stop":stop, "in_queue":self.to_thread, "out_queue":self.from_thread, "stop":stop, "topic_partition":topic_partition})
         self.thread.start()
 
-    def get_latest_values(self):
-        current_msg = None
+    def get_messages(self):
         while not self.from_thread.empty():
             try:
                 current_msg = self.from_thread.get(block=False)
+                if type(current_msg) is dict:
+                    self.current_msg = current_msg
+                elif type(current_msg) is HighLowOffset:
+                    self.current_offset_limits = current_msg
             except Empty:
-                return None
-        return current_msg
+                return
 
+    def get_latest_values(self):
+        self.get_messages()
+        return self.current_msg
+
+    def get_current_edge_offsets(self):
+        self.get_messages()
+        return self.current_offset_limits
 
 
 

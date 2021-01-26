@@ -35,12 +35,20 @@ def extract_end(end: str):
 
 def main(broker: str, topic: str, partition: int, start: str, end: str):
     tracker = KafkaMessageTracker(broker, topic, partition=partition, start=extract_start(start), stop=extract_end(end))
-    renderer = CursesRenderer()
+    renderer = CursesRenderer(topic, partition)
     try:
         while True:
             latest_update = tracker.get_latest_values()
             if latest_update is not None:
-                renderer.set_data(latest_update)
+                current_offsets = tracker.get_current_edge_offsets()
+                max_current_offset = 0
+                for key in latest_update:
+                    if latest_update[key].last_message.offset > max_current_offset:
+                        max_current_offset = latest_update[key].last_message.offset
+                    current_offsets.lag = current_offsets.high - max_current_offset
+                if latest_update is not None:
+                    renderer.set_data(latest_update)
+                    renderer.set_partition_offsets(current_offsets)
             renderer.draw()
             time.sleep(0.01)
     except KeyboardInterrupt:
