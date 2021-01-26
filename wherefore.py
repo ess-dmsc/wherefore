@@ -39,13 +39,14 @@ def main(broker: str, topic: str, partition: int, start: str, end: str):
     try:
         while True:
             latest_update = tracker.get_latest_values()
-            if latest_update is not None:
+            if latest_update is not None and len(latest_update) > 0:
                 current_offsets = tracker.get_current_edge_offsets()
                 max_current_offset = 0
-                for key in latest_update:
-                    if latest_update[key].last_message.offset > max_current_offset:
-                        max_current_offset = latest_update[key].last_message.offset
-                    current_offsets.lag = current_offsets.high - max_current_offset
+                for source in latest_update.values():
+                    msg_offset = source.last_message.offset
+                    if msg_offset > max_current_offset:
+                        max_current_offset = msg_offset
+                current_offsets.lag = current_offsets.high - max_current_offset
                 if latest_update is not None:
                     renderer.set_data(latest_update)
                     renderer.set_partition_offsets(current_offsets)

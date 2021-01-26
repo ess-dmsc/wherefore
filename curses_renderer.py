@@ -148,7 +148,7 @@ class CursesRenderer:
         self.handle_key_press()
         height, width = self.screen.getmaxyx()
         header_line = f"Topic: {self.topic_name}, Partition#: {self.partition}"
-        header_line2 = f"Low offset: {self.current_offsets.low}  High offset: {self.current_offsets.high}  Lag: {self.current_offsets.lag}"
+        header_line2 = f"Low offset: {self.current_offsets.low:10d}  High offset: {self.current_offsets.high:10d}  Lag: {self.current_offsets.lag:10d}"
         draw_full_line(self.screen, 0, header_line)
         draw_full_line(self.screen, 1, header_line2)
         self.draw_sources_list()

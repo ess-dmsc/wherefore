@@ -68,7 +68,7 @@ def wrdn_extractor(data: bytes):
 
 def ndar_extractor(data: bytes):
     extracted = deserialise_ndar(data)
-    return "AreaDetector_data", extracted.timestamp
+    return "AreaDetector_data", datetime.fromtimestamp(extracted.timestamp + 631152000, tz=timezone.utc)
 
 
 def rf5k_extractor(data: bytes):
