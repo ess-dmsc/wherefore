@@ -77,7 +77,7 @@ if __name__ == "__main__":
         "-s",
         "--start",
         type=str,
-        help="Where should consumption start? Takes a datetime (e.g. `-s 2012-01-01 12:30:12`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `beginning`, `end`.",
+        help="Where should consumption start? Takes a datetime (e.g. `-s \"2012-01-01 12:30:12\"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `beginning`, `end`.",
         default="end"
     )
 
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         "-e",
         "--end",
         type=str,
-        help="Where should consumption stop/end? Takes a datetime (e.g. `-s 2012-01-01 12:30:12`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.",
+        help="Where should consumption stop/end? Takes a datetime (e.g. `-s \"2012-01-01 12:30:12\"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.",
         default="never"
     )
 

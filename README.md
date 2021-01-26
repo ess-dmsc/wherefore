@@ -32,11 +32,11 @@ required arguments:
 
 The default partition if none is selected is _0_. It is possible to use different types of start and stop criteria. E.g.:
 ```
-python wherefore -b some_broker -t some_topic --start beginning --end 2019-11-08 02:01
+python wherefore.py -b some_broker -t some_topic --start beginning --end 2019-11-08 02:01
 ```
 or
 ```
-python wherefore -b some_broker -t some_topic --start 1234 --end 1611167278s
+python wherefore.py -b some_broker -t some_topic --start 1234 --end 1611167278s
 ```
 
 ## Known flatbuffer schemas
