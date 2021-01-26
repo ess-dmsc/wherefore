@@ -1,5 +1,6 @@
 from streaming_data_types.utils import get_schema
 from streaming_data_types import deserialise_ev42,deserialise_hs00, deserialise_wrdn, deserialise_f142, deserialise_ns10, deserialise_pl72, deserialise_6s4t, deserialise_x5f2, deserialise_ep00, deserialise_tdct, deserialise_rf5k, deserialise_answ, deserialise_ndar
+from wherefore.MonitorMessage import MonitorMessage
 from datetime import datetime, timezone
 from typing import Tuple
 import hashlib
@@ -70,6 +71,19 @@ def ndar_extractor(data: bytes):
     return "AreaDetector_data", extracted.timestamp
 
 
+def rf5k_extractor(data: bytes):
+    return "EPICS forwarder", None
+
+
+def json_extractor(data: bytes):
+    return "JSON in Flatbuffer", None
+
+
+def mo01_extractor(data: bytes):
+    message = MonitorMessage.GetRootAsMonitorMessage(data, 0)
+    return message.SourceName().decode(), None
+
+
 def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime]:
     message_type = get_schema(message_data)
     type_extractor_map = {
@@ -86,6 +100,9 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime]:
         "answ": answ_extractor,
         "wrdn": wrdn_extractor,
         "NDAr": ndar_extractor,
+        "rf5k": rf5k_extractor,
+        "json": json_extractor,
+        "mo01": mo01_extractor,
     }
     try:
         name, timestamp = type_extractor_map[message_type](message_data)

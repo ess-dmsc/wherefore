@@ -4,7 +4,7 @@ from typing import Union, Dict, List, Optional
 from wherefore.DataSource import DataSource
 from datetime import datetime, timezone
 
-DEBUG = True
+DEBUG = False
 DEFAULT_LIST_ROWS = 10
 DEFAULT_LIST_WIDTH = 80
 
@@ -43,6 +43,7 @@ class CursesRenderer:
         self.screen = curses.initscr()
         curses.noecho()
         curses.cbreak()
+        curses.curs_set(0)
         self.screen.keypad(1)
         self.screen.timeout(0)
         self.selected_item = 0
@@ -51,6 +52,7 @@ class CursesRenderer:
     def __del__(self):
         if not DEBUG:
             curses.nocbreak()
+            curses.curs_set(1)
             self.screen.keypad(0)
             curses.echo()
             curses.endwin()
@@ -67,7 +69,7 @@ class CursesRenderer:
         height, width = self.screen.getmaxyx()
         used_width = DEFAULT_LIST_WIDTH
         prototype_line = "{:^6.6s}| {:40.40s}| {:30.30s}"
-        draw_full_line(self.screen, 1, prototype_line.format("Id", " Name", " Last timestamp"))
+        draw_full_line(self.screen, 1, prototype_line.format("Id", "Name", "Last timestamp"))
         self.screen.addstr(2, 0, "-" * used_width)
         if width < used_width:
             used_width = width
@@ -100,8 +102,8 @@ class CursesRenderer:
 
         info_rows.append("")
         first_ts_string = time_to_str(current_source.first_timestamp)
-        info_rows.append(f"  First offset: {current_source.first_offset:>10d}    First timestamp: {first_ts_string}")
-        info_rows.append(f"Current offset: {current_message.offset:>10d}    Consumption rate: {current_source.processed_per_second:.3f}/s")
+        info_rows.append(f"First offset: {current_source.first_offset:>12d}    First timestamp: {first_ts_string}")
+        info_rows.append(f"Current offset: {current_message.offset:>10d}    Consumption rate: {current_source.processed_per_second:8.3f}/s")
         info_rows.append(
             f"Received messages: {current_source.processed_messages:7d}    Message rate: {current_source.messages_per_second:12.3f}/s")
         info_rows.append("")
@@ -143,6 +145,4 @@ class CursesRenderer:
         self.draw_sources_list()
         self.draw_selected_source_info()
         self.screen.refresh()
-
-
 
