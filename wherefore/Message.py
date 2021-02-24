@@ -1,4 +1,4 @@
-from streaming_data_types.utils import get_schema
+from streaming_data_types.utils import _get_schema as get_schema
 from streaming_data_types import deserialise_ev42,deserialise_hs00, deserialise_wrdn, deserialise_f142, deserialise_ns10, deserialise_pl72, deserialise_6s4t, deserialise_x5f2, deserialise_ep00, deserialise_tdct, deserialise_rf5k, deserialise_answ, deserialise_ndar
 from wherefore.MonitorMessage import MonitorMessage
 from datetime import datetime, timezone

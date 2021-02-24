@@ -20,7 +20,7 @@ class PartitionOffset(Enum):
 
 
 class HighLowOffset:
-    def __init__(self, low, high, lag = -1):
+    def __init__(self, low, high, lag=-1):
         self.low = low
         self.lag = lag
         self.high = high
@@ -94,10 +94,10 @@ class KafkaMessageTracker:
             consumer.seek(partition=topic_partition, offset=found_offsets[topic_partition].offset)
         self.to_thread = Queue()
         self.from_thread = Queue(maxsize=100)
-        self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer":consumer, "stop":stop, "in_queue":self.to_thread, "out_queue":self.from_thread, "stop":stop, "topic_partition":topic_partition})
+        self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer": consumer, "stop": stop, "in_queue": self.to_thread, "out_queue": self.from_thread, "stop": stop, "topic_partition": topic_partition})
         self.thread.start()
 
-    def get_messages(self):
+    def _get_messages(self):
         while not self.from_thread.empty():
             try:
                 current_msg = self.from_thread.get(block=False)
@@ -109,11 +109,11 @@ class KafkaMessageTracker:
                 return
 
     def get_latest_values(self):
-        self.get_messages()
+        self._get_messages()
         return self.current_msg
 
-    def get_current_edge_offsets(self):
-        self.get_messages()
+    def get_current_edge_offsets(self) -> HighLowOffset:
+        self._get_messages()
         return self.current_offset_limits
 
 

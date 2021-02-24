@@ -23,6 +23,18 @@ class DataSource:
             else:
                 self._first_timestamp = msg.timestamp
 
+    def __repr__(self):
+        return "DataSource: " + self.__str__()
+
+    def __str__(self):
+        return f"{self.source_name} (type: {self.source_type})"
+
+    def __eq__(self, other: "DataSource"):
+        return self.source_name == other.source_name and self.source_type == other.source_type
+
+    def __lt__(self, other: "DataSource"):
+        return self.source_name.lower() < other.source_name.lower() or self.source_type < other.source_type
+
     @property
     def source_name(self) -> str:
         return self._source_name
