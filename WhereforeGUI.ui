@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>810</width>
-    <height>600</height>
+    <height>595</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -147,25 +147,41 @@
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
          <widget class="QGroupBox" name="partitionInfoBox">
+          <property name="minimumSize">
+           <size>
+            <width>500</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="title">
            <string>Partition info</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
             <layout class="QHBoxLayout" name="partitionInfoLayout">
+             <property name="spacing">
+              <number>-1</number>
+             </property>
+             <property name="sizeConstraint">
+              <enum>QLayout::SetDefaultConstraint</enum>
+             </property>
              <item>
-              <widget class="QLabel" name="lowOffsetLabel">
-               <property name="text">
-                <string>Low offset:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lowOffsetValue">
-               <property name="text">
-                <string>n/a</string>
-               </property>
-              </widget>
+              <layout class="QFormLayout" name="lowLayout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="lowOffsetLabel">
+                 <property name="text">
+                  <string>Low offset:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="lowOffsetValue">
+                 <property name="text">
+                  <string>n/a</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="Line" name="line3_1">
@@ -175,18 +191,22 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="highOffsetLabel">
-               <property name="text">
-                <string>High offset:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="highOffsetValue">
-               <property name="text">
-                <string>n/a</string>
-               </property>
-              </widget>
+              <layout class="QFormLayout" name="highLayout">
+               <item row="1" column="0">
+                <widget class="QLabel" name="highOffsetLabel">
+                 <property name="text">
+                  <string>High offset:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="highOffsetValue">
+                 <property name="text">
+                  <string>n/a</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="Line" name="line3_2">
@@ -196,18 +216,22 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="lagLabel">
-               <property name="text">
-                <string>Current offset:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lagValue">
-               <property name="text">
-                <string>n/a</string>
-               </property>
-              </widget>
+              <layout class="QFormLayout" name="lagLayout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="lagLabel">
+                 <property name="text">
+                  <string>Current lag:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="lagValue">
+                 <property name="text">
+                  <string>n/a</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
@@ -215,10 +239,136 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox">
+         <widget class="QGroupBox" name="sourceInfoBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
+          </property>
           <property name="title">
            <string>Source info</string>
           </property>
+          <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0">
+           <property name="spacing">
+            <number>-1</number>
+           </property>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <layout class="QGridLayout" name="gridLayout" rowstretch="0" columnstretch="0,0">
+               <property name="sizeConstraint">
+                <enum>QLayout::SetNoConstraint</enum>
+               </property>
+               <property name="horizontalSpacing">
+                <number>-1</number>
+               </property>
+               <item row="0" column="0">
+                <layout class="QHBoxLayout" name="horizontalLayout">
+                 <item>
+                  <widget class="QLabel" name="sourceNameLabel">
+                   <property name="text">
+                    <string>Source name:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="sourceNameValue">
+                   <property name="text">
+                    <string>n/a</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="0" column="1">
+                <layout class="QHBoxLayout" name="horizontalLayout_3">
+                 <item>
+                  <widget class="QLabel" name="sourceTypeLabel">
+                   <property name="text">
+                    <string>Source type:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="sourceTypeValue">
+                   <property name="text">
+                    <string>n/a</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="timestampsBox">
+             <property name="title">
+              <string>Timestamps</string>
+             </property>
+             <layout class="QFormLayout" name="formLayout_2">
+              <item row="0" column="0">
+               <widget class="QLabel" name="firstMsgTimLabel">
+                <property name="text">
+                 <string>First message time</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="firstMsgTimeValue">
+                <property name="text">
+                 <string>n/a</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="lastMsgReceiveTimeLabel">
+                <property name="text">
+                 <string>Last receive time</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="lastMsgReceiveTimeValue">
+                <property name="text">
+                 <string>n/a</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="lastMsgTimeLabel">
+                <property name="text">
+                 <string>Last message time</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLabel" name="lastMsgTimeValue">
+                <property name="text">
+                 <string>n/a</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="lastMsgKafkaTimeLabel">
+                <property name="text">
+                 <string>Last Kafka time</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLabel" name="lastMsgKafkaTimeValue">
+                <property name="text">
+                 <string>n/a</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>

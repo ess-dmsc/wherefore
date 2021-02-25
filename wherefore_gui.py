@@ -10,6 +10,26 @@ from wherefore.KafkaTopicPartitions import get_topic_partitions
 from wherefore.TopicPartitionSourceTreeModel import TopicPartitionSourceTreeModel
 from PyQt5.QtCore import QSettings
 from wherefore.TreeItems import PartitionItem, SourceItem
+from datetime import datetime, timezone
+
+
+def datetime_to_str(timestamp: Optional[datetime], now: datetime):
+    if timestamp is None:
+        return "n/a"
+    time_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f %Z")
+    time_diff = (now - timestamp).total_seconds()
+    use_diff = time_diff
+    diff_unit = "s"
+    if abs(time_diff) > 59:
+        use_diff = time_diff / 60
+        diff_unit = "m"
+    if abs(time_diff) > 3599:
+        use_diff = time_diff / 3600
+        diff_unit = "h"
+    if abs(time_diff) > 3600 * 24 - 1:
+        use_diff = time_diff / (3600 * 24)
+        diff_unit = "d"
+    return f"{time_str}, age: {use_diff:.2f} {diff_unit}"
 
 
 class AdcViewerApp(QtWidgets.QMainWindow):
@@ -34,9 +54,9 @@ class AdcViewerApp(QtWidgets.QMainWindow):
 
         self.selectedSource: Optional[SourceItem] = None
         self.selectedPartition: Optional[PartitionItem] = None
-        # self.sourceTrackerTimer = QTimer()
-        # self.sourceTrackerTimer.timeout.connect(self.onUpdateSelectedData)
-        # self.sourceTrackerTimer.start(100)
+        self.updateDataTimer = QTimer()
+        self.updateDataTimer.timeout.connect(self.onUpdateSelectedData)
+        self.updateDataTimer.start(100)
 
         self.topicUpdateFuture = None
         self.topicPartitionModel = TopicPartitionSourceTreeModel()
@@ -103,9 +123,13 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         elif isinstance(selected_item, SourceItem):
             self.selectedPartition = selected_item.parent
             self.selectedSource = selected_item
+            self.ui.sourceNameValue.setText(self.selectedSource.name)
+            self.ui.sourceTypeValue.setText(self.selectedSource.type)
         else:
             self.selectedPartition = None
             self.selectedSource = None
+            self.ui.sourceNameValue.setText("n/a")
+            self.ui.sourceTypeValue.setText("n/a")
 
     def onUpdateSelectedData(self):
         if self.selectedPartition is not None:
@@ -114,13 +138,27 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                 return
             self.ui.lowOffsetValue.setText(str(partition_info.low))
             self.ui.highOffsetValue.setText(str(partition_info.high))
-            self.ui.lagValue.setText(str(partition_info.high - partition_info.lag))
+            self.ui.lagValue.setText(str(partition_info.lag))
         else:
             self.ui.lowOffsetValue.setText("n/a")
             self.ui.highOffsetValue.setText("n/a")
             self.ui.lagValue.setText("n/a")
         if self.selectedSource is not None:
-            pass
+            current_source_info = self.selectedSource.parent.get_known_sources()
+            for c_source in current_source_info.values():
+                if c_source.source_name == self.selectedSource.name and c_source.source_type == self.selectedSource.type:
+                    now = datetime.now(tz=timezone.utc)
+                    self.ui.firstMsgTimeValue.setText(datetime_to_str(c_source.first_timestamp, now))
+                    self.ui.lastMsgKafkaTimeValue.setText(datetime_to_str(c_source.last_message.kafka_timestamp, now))
+                    self.ui.lastMsgReceiveTimeValue.setText(datetime_to_str(c_source.last_message.local_timestamp, now))
+                    self.ui.lastMsgTimeValue.setText(datetime_to_str(c_source.last_message.timestamp, now))
+                    break
+        else:
+            self.ui.firstMsgTimeValue.setText("n/a")
+            self.ui.lastMsgKafkaTimeValue.setText("n/a")
+            self.ui.lastMsgReceiveTimeValue.setText("n/a")
+            self.ui.lastMsgTimeValue.setText("n/a")
+
 
     def startTextEditedTimer(self):
         self.brokerEditTimer.start(500)
