@@ -78,7 +78,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.ui.startAtSelector.currentIndexChanged.connect(self.on_change_start_at)
         self.ui.endAtSelector.currentIndexChanged.connect(self.on_change_end_at)
         self.ui.brokerLed = Led(self)
-        self.ui.consumerBarLayout.insertWidget(2, self.ui.brokerLed)
+        self.ui.consumerBarLayout.insertWidget(1, self.ui.brokerLed)
         self.ui.brokerAddressEdit.textEdited.connect(self.startTextEditedTimer)
         self.ui.topicPartitionSourceTree.setModel(self.topicPartitionModel)
 
@@ -152,12 +152,24 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                     self.ui.lastMsgKafkaTimeValue.setText(datetime_to_str(c_source.last_message.kafka_timestamp, now))
                     self.ui.lastMsgReceiveTimeValue.setText(datetime_to_str(c_source.last_message.local_timestamp, now))
                     self.ui.lastMsgTimeValue.setText(datetime_to_str(c_source.last_message.timestamp, now))
+
+                    self.ui.consumptionRateValue.setText(f"{c_source.processed_per_second:.3f}/s")
+                    self.ui.currentOffsetValue.setText(f"{c_source.last_message.offset}")
+                    self.ui.firstOffsetValue.setText(f"{c_source.first_offset}")
+                    self.ui.messageRateValue.setText(f"{c_source.messages_per_second:.3f}/s")
+                    self.ui.receivedMessagesValue.setText(f"{c_source.processed_messages}")
                     break
         else:
             self.ui.firstMsgTimeValue.setText("n/a")
             self.ui.lastMsgKafkaTimeValue.setText("n/a")
             self.ui.lastMsgReceiveTimeValue.setText("n/a")
             self.ui.lastMsgTimeValue.setText("n/a")
+
+            self.ui.consumptionRateValue.setText("n/a")
+            self.ui.currentOffsetValue.setText("n/a")
+            self.ui.firstOffsetValue.setText("n/a")
+            self.ui.messageRateValue.setText("n/a")
+            self.ui.receivedMessagesValue.setText("n/a")
 
 
     def startTextEditedTimer(self):
