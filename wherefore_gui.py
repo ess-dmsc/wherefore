@@ -71,6 +71,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.ui.startAtSelector.addItems(["beginning", "end", "offset", "timestamp"])
         self.ui.startAtSelector.setCurrentIndex(1)
         self.ui.endAtSelector.addItems(["never", "end", "offset", "timestamp"])
+        self.ui.enableDefaultComboBox.addItems(["Enable new", "Disable new"])
         self.ui.startTimeEdit.hide()
         self.ui.startOffsetEdit.hide()
         self.ui.endOffsetEdit.hide()
@@ -80,13 +81,22 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.ui.brokerLed = Led(self)
         self.ui.consumerBarLayout.insertWidget(1, self.ui.brokerLed)
         self.ui.brokerAddressEdit.textEdited.connect(self.startTextEditedTimer)
+        self.ui.enableAllButton.clicked.connect(self.onEnableAllPartitions)
+        self.ui.disableAllButton.clicked.connect(self.onDisableAllPartitions)
         self.ui.topicPartitionSourceTree.setModel(self.topicPartitionModel)
+        header_view = self.ui.topicPartitionSourceTree.header()
+        header_view.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header_view.setStretchLastSection(False)
+        header_view.resizeSection(1, 50)
+        self.ui.topicPartitionSourceTree.setHeader(header_view)
 
         self.ui.topicPartitionSourceTree.selectionModel().selectionChanged.connect(self.on_tree_node_selection)
 
         self.ui.brokerAddressEdit.setText(self.config.value("kafka_address", type=str))
         if len(self.ui.brokerAddressEdit.text()) > 0:
             self.onBrokerEditTimer()
+
+        self.ui.enableDefaultComboBox.setCurrentIndex(self.config.value("enable_default", type=int, defaultValue=0))
         self.show()
 
     def on_change_end_at(self, new_index):
@@ -132,7 +142,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
             self.ui.sourceTypeValue.setText("n/a")
 
     def onUpdateSelectedData(self):
-        if self.selectedPartition is not None:
+        if self.selectedPartition is not None and self.selectedPartition.enabled:
             partition_info = self.selectedPartition.get_partition_info()
             if partition_info is None:
                 return
@@ -145,6 +155,9 @@ class AdcViewerApp(QtWidgets.QMainWindow):
             self.ui.lagValue.setText("n/a")
         if self.selectedSource is not None:
             current_source_info = self.selectedSource.parent.get_known_sources()
+            if current_source_info is None:
+                self.unset_source_info()
+                return
             for c_source in current_source_info.values():
                 if c_source.source_name == self.selectedSource.name and c_source.source_type == self.selectedSource.type:
                     now = datetime.now(tz=timezone.utc)
@@ -153,24 +166,26 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                     self.ui.lastMsgReceiveTimeValue.setText(datetime_to_str(c_source.last_message.local_timestamp, now))
                     self.ui.lastMsgTimeValue.setText(datetime_to_str(c_source.last_message.timestamp, now))
 
-                    self.ui.consumptionRateValue.setText(f"{c_source.processed_per_second:.3f}/s")
+                    self.ui.consumptionRateValue.setText(f"{c_source.processed_per_second:.2f}/s")
                     self.ui.currentOffsetValue.setText(f"{c_source.last_message.offset}")
                     self.ui.firstOffsetValue.setText(f"{c_source.first_offset}")
-                    self.ui.messageRateValue.setText(f"{c_source.messages_per_second:.3f}/s")
+                    self.ui.messageRateValue.setText(f"{c_source.messages_per_second:.2f}/s")
                     self.ui.receivedMessagesValue.setText(f"{c_source.processed_messages}")
                     break
         else:
-            self.ui.firstMsgTimeValue.setText("n/a")
-            self.ui.lastMsgKafkaTimeValue.setText("n/a")
-            self.ui.lastMsgReceiveTimeValue.setText("n/a")
-            self.ui.lastMsgTimeValue.setText("n/a")
+            self.unset_source_info()
 
-            self.ui.consumptionRateValue.setText("n/a")
-            self.ui.currentOffsetValue.setText("n/a")
-            self.ui.firstOffsetValue.setText("n/a")
-            self.ui.messageRateValue.setText("n/a")
-            self.ui.receivedMessagesValue.setText("n/a")
+    def unset_source_info(self):
+        self.ui.firstMsgTimeValue.setText("n/a")
+        self.ui.lastMsgKafkaTimeValue.setText("n/a")
+        self.ui.lastMsgReceiveTimeValue.setText("n/a")
+        self.ui.lastMsgTimeValue.setText("n/a")
 
+        self.ui.consumptionRateValue.setText("n/a")
+        self.ui.currentOffsetValue.setText("n/a")
+        self.ui.firstOffsetValue.setText("n/a")
+        self.ui.messageRateValue.setText("n/a")
+        self.ui.receivedMessagesValue.setText("n/a")
 
     def startTextEditedTimer(self):
         self.brokerEditTimer.start(500)
@@ -181,6 +196,12 @@ class AdcViewerApp(QtWidgets.QMainWindow):
 
     def onCheckForNewSources(self):
         self.topicPartitionModel.check_for_sources()
+
+    def onEnableAllPartitions(self):
+        self.topicPartitionModel.enable_all()
+
+    def onDisableAllPartitions(self):
+        self.topicPartitionModel.disable_all()
 
     def onCheckIfTopicsUpdated(self):
         if self.topicUpdateFuture is not None and self.topicUpdateFuture.done():
@@ -195,10 +216,14 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                 pass  #Ignore
 
     def updateTopicTree(self, known_topics):
-        self.topicPartitionModel.update_topics(known_topics)
+        enable_new_partitions = True
+        if self.ui.enableDefaultComboBox.currentIndex() == 1:
+            enable_new_partitions = False
+        self.topicPartitionModel.update_topics(known_topics, enable_new_partitions)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.config.setValue("kafka_address", self.ui.brokerAddressEdit.text())
+        self.config.setValue("enable_default", self.ui.enableDefaultComboBox.currentIndex())
         event.accept()
 
 
@@ -209,12 +234,6 @@ if __name__ == "__main__":
         with open(str(ui_file_path)) as ui_file:
             with open("WhereforeGUI.py", "w") as py_ui_file:
                 PyQt5.uic.compileUi(ui_file, py_ui_file)
-
-    # selector_path = Path("Data_source.ui")
-    # if selector_path.exists():
-    #     with open(str(selector_path)) as ui_file:
-    #         with open("Data_source.py", "w") as py_ui_file:
-    #             PyQt5.uic.compileUi(ui_file, py_ui_file)
 
     app = QtWidgets.QApplication([])
     main_window = AdcViewerApp()

@@ -47,11 +47,11 @@ class RootItem:
 
     @property
     def column_count(self) -> int:
-        return 1
+        return 2
 
     def data(self, column: int) -> str:
         try:
-            return ("", "Active")[column]
+            return ("", "Enabled")[column]
         except IndexError:
             return None
 
@@ -86,8 +86,8 @@ class TopicItem:
                 return i
         return len(self._partitions)
 
-    def add_partition(self, partition: int, broker: str):
-        self._partitions.insert(self.get_partition_insert_location(partition), PartitionItem(partition, self, broker))
+    def add_partition(self, partition: int, broker: str, enable: bool = True):
+        self._partitions.insert(self.get_partition_insert_location(partition), PartitionItem(partition, self, broker, enable))
 
     def child(self, row: int) -> "PartitionItem":
         return self._partitions[row]
@@ -102,7 +102,7 @@ class TopicItem:
 
     @property
     def column_count(self) -> int:
-        return 1
+        return 2
 
     def data(self, column: int):
         return self._topic_name
@@ -124,8 +124,9 @@ class TopicItem:
 
 
 class PartitionItem:
-    def __init__(self, partition: int, parent: TopicItem, broker: str):
+    def __init__(self, partition: int, parent: TopicItem, broker: str, enable: bool = True):
         super().__init__()
+        self._enabled = enable
         self._partition = partition
         self._sources: List[SourceItem] = []
         self._parent = parent
@@ -133,7 +134,8 @@ class PartitionItem:
         self._thread_pool = ThreadPoolExecutor(2)
         self._message_tracker: Optional[KafkaMessageTracker] = None
         self._message_tracker_future: Optional[Future] = None
-        self.start_message_monitoring()
+        if enable:
+            self.start_message_monitoring()
 
     def start_message_monitoring(self):
         if self._broker is not None and self._broker != "":
@@ -141,7 +143,7 @@ class PartitionItem:
             self._message_tracker_future = self._thread_pool.submit(launch_tracker, self._broker, self._parent.name, self.partition_id)
 
     def _check_message_tracker_status(self):
-        if self._message_tracker_future is not None and self._message_tracker_future.done():
+        if self._enabled and self._message_tracker_future is not None and self._message_tracker_future.done():
             try:
                 self._message_tracker = self._message_tracker_future.result()
                 self._message_tracker_future = None
@@ -189,7 +191,7 @@ class PartitionItem:
 
     @property
     def column_count(self) -> int:
-        return 1
+        return 2
 
     def data(self, column: int) -> str:
         return f"Partition #{self._partition}"
@@ -204,6 +206,27 @@ class PartitionItem:
     @property
     def partition_id(self) -> int:
         return self._partition
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, new_value: bool):
+        if self._enabled and not new_value:
+            if self._message_tracker_future is not None and self._message_tracker_future.done():
+                # Note, this code will fail to stop the thread in some (corner) cases
+                try:
+                    self._message_tracker_future.result().stop_thread()
+                except NoBrokersAvailable:
+                    pass
+            self._message_tracker_future = None
+            if self._message_tracker is not None:
+                self._message_tracker.stop_thread()
+                self._message_tracker = None
+        elif not self._enabled and new_value:
+            self.start_message_monitoring()
+        self._enabled = new_value
 
 
 class SourceItem:
@@ -229,7 +252,7 @@ class SourceItem:
 
     @property
     def column_count(self) -> int:
-        return 1
+        return 2
 
     def data(self, column: int):
         return f"{self._source_name} : {self._source_type}"

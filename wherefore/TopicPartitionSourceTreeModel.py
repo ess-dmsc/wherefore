@@ -1,6 +1,6 @@
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant
 import typing
-from wherefore.TreeItems import RootItem
+from wherefore.TreeItems import RootItem, PartitionItem
 
 
 class TopicPartitionSourceTreeModel(QAbstractItemModel):
@@ -12,7 +12,20 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
     def set_kafka_broker(self, kafka_broker: str):
         self.kafka_broker = kafka_broker
 
-    def update_topics(self, known_topics):
+    def enable_all(self, enable: bool = True):
+        root_index = QModelIndex()
+        for i, c_topic in enumerate(self.root_item.topics):
+            topic_index = self.index(i, 0, root_index)
+            for j, c_partition in enumerate(c_topic.partitions):
+                partition_index = self.index(j, 1, topic_index)
+                c_partition.enabled = enable
+                self.dataChanged.emit(partition_index, partition_index)
+
+    def disable_all(self):
+        self.enable_all(False)
+
+
+    def update_topics(self, known_topics, enable_new_partition: bool = True):
         for c_topic in known_topics:
             if not self.root_item.topic_is_known(c_topic["name"]):
                 insert_loc = self.root_item.get_topic_insert_location(c_topic["name"])
@@ -24,7 +37,7 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
                 if not topic_item.partition_is_known(c_partition):
                     insert_loc = topic_item.get_partition_insert_location(c_partition)
                     self.beginInsertRows(self.index(self.root_item.get_topic_location(topic_item.name), 0, QModelIndex()), insert_loc, insert_loc)
-                    topic_item.add_partition(c_partition, self.kafka_broker)
+                    topic_item.add_partition(c_partition, self.kafka_broker, enable_new_partition)
                     self.endInsertRows()
 
     def check_for_sources(self):
@@ -43,29 +56,47 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
                         c_partition.add_source(source.source_name, source.source_type)
                         self.endInsertRows()
 
-
     def columnCount(self, parent: QModelIndex = ...) -> int:
         if parent.isValid():
             return parent.internalPointer().column_count
         else:
             return self.root_item.column_count
 
-    def data(self, index: QModelIndex, role: int = ...) -> typing.Any:
+    def data(self, index: QModelIndex, role: int) -> typing.Any:
         if not index.isValid():
-            return None
+            return QVariant()
 
-        if role != Qt.DisplayRole:
-            return None
+        if index.column() == 1 and role == Qt.CheckStateRole and isinstance(index.internalPointer(), PartitionItem):
+            if index.internalPointer().enabled:
+                return Qt.CheckState(Qt.Checked)
+            else:
+                return Qt.CheckState(Qt.Unchecked)
 
+        if role != Qt.DisplayRole or index.column() == 1:
+            return QVariant()
         item = index.internalPointer()
 
         return item.data(index.column())
+
+    def setData(self, index: QModelIndex, value: typing.Any, role: int = ...) -> bool:
+        if role == Qt.CheckStateRole:
+            if value == Qt.Checked:
+                index.internalPointer().enabled = True
+            else:
+                index.internalPointer().enabled = False
+        self.dataChanged.emit(index, index)
+        return True
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         if not index.isValid():
             return Qt.NoItemFlags
 
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+
+        if index.column() == 1 and isinstance(index.internalPointer(), PartitionItem):
+            flags |= Qt.ItemIsUserCheckable
+
+        return flags
 
     def rowCount(self, parent: QModelIndex = ...) -> int:
         if parent.column() > 0:

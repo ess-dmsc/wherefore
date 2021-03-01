@@ -97,6 +97,12 @@ class KafkaMessageTracker:
         self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer": consumer, "stop": stop, "in_queue": self.to_thread, "out_queue": self.from_thread, "stop": stop, "topic_partition": topic_partition})
         self.thread.start()
 
+    def stop_thread(self):
+        self.to_thread.put("exit")
+
+    def __del__(self):
+        self.stop_thread()
+
     def _get_messages(self):
         while not self.from_thread.empty():
             try:

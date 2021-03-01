@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>810</width>
+    <width>858</width>
     <height>595</height>
    </rect>
   </property>
@@ -133,6 +133,31 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QTreeView" name="topicPartitionSourceTree"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="enableDisableLayout">
+          <item>
+           <widget class="QPushButton" name="enableAllButton">
+            <property name="text">
+             <string>Enable all</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="disableAllButton">
+            <property name="text">
+             <string>Disable all</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="enableDefaultComboBox">
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -476,7 +501,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>810</width>
+     <width>858</width>
      <height>22</height>
     </rect>
    </property>
