@@ -1,6 +1,8 @@
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant
 import typing
 from wherefore.TreeItems import RootItem, PartitionItem
+from datetime import datetime
+from wherefore.KafkaMessageTracker import PartitionOffset
 
 
 class TopicPartitionSourceTreeModel(QAbstractItemModel):
@@ -24,8 +26,7 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
     def disable_all(self):
         self.enable_all(False)
 
-
-    def update_topics(self, known_topics, enable_new_partition: bool = True):
+    def update_topics(self, known_topics, start: typing.Union[int, datetime, PartitionOffset], stop: typing.Union[int, datetime, PartitionOffset], enable_new_partition: bool = True):
         for c_topic in known_topics:
             if not self.root_item.topic_is_known(c_topic["name"]):
                 insert_loc = self.root_item.get_topic_insert_location(c_topic["name"])
@@ -37,7 +38,7 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
                 if not topic_item.partition_is_known(c_partition):
                     insert_loc = topic_item.get_partition_insert_location(c_partition)
                     self.beginInsertRows(self.index(self.root_item.get_topic_location(topic_item.name), 0, QModelIndex()), insert_loc, insert_loc)
-                    topic_item.add_partition(c_partition, self.kafka_broker, enable_new_partition)
+                    topic_item.add_partition(c_partition, self.kafka_broker, start, stop, enable_new_partition)
                     self.endInsertRows()
 
     def check_for_sources(self):
@@ -141,3 +142,13 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
             return self.root_item.data(section)
 
         return None
+
+    def setNewStart(self, start: typing.Union[int, datetime, PartitionOffset]):
+        for c_topic in self.root_item.topics:
+            for c_partition in c_topic.partitions:
+                c_partition.set_new_start(start)
+
+    def setNewStop(self, stop: typing.Union[int, datetime, PartitionOffset]):
+        for c_topic in self.root_item.topics:
+            for c_partition in c_topic.partitions:
+                c_partition.set_new_stop(stop)

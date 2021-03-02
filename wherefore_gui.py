@@ -3,14 +3,15 @@ from PyQt5.QtCore import QSettings, QTimer
 import PyQt5.uic
 from PyQt5 import QtGui
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 from led import Led
 from concurrent.futures import ThreadPoolExecutor
 from wherefore.KafkaTopicPartitions import get_topic_partitions
+from wherefore.KafkaMessageTracker import PartitionOffset
 from wherefore.TopicPartitionSourceTreeModel import TopicPartitionSourceTreeModel
 from PyQt5.QtCore import QSettings
 from wherefore.TreeItems import PartitionItem, SourceItem
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 
 def datetime_to_str(timestamp: Optional[datetime], now: datetime):
@@ -43,6 +44,11 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.brokerEditTimer = QTimer()
         self.brokerEditTimer.timeout.connect(self.onBrokerEditTimer)
         self.brokerEditTimer.setSingleShot(True)
+
+        self.editStartStopTimer = QTimer()
+        self.editStartStopTimer.timeout.connect(self.onEditStartStopTimer)
+        self.editStartStopTimer.setSingleShot(True)
+
         self.thread_pool = ThreadPoolExecutor(5)
         self.topicPartitionQueryTimer = QTimer()
         self.topicPartitionQueryTimer.timeout.connect(self.onCheckIfTopicsUpdated)
@@ -62,6 +68,8 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.topicPartitionModel = TopicPartitionSourceTreeModel()
         self.config = QSettings("ESS", "Wherefore")
         self.setup()
+        self.current_start: Union[int, datetime, PartitionOffset] = self.getStartCondition()
+        self.current_stop: Union[int, datetime, PartitionOffset] = self.getStopCondition()
 
     def setup(self):
         import WhereforeGUI
@@ -84,6 +92,10 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.ui.enableAllButton.clicked.connect(self.onEnableAllPartitions)
         self.ui.disableAllButton.clicked.connect(self.onDisableAllPartitions)
         self.ui.topicPartitionSourceTree.setModel(self.topicPartitionModel)
+        self.ui.startOffsetEdit.textEdited.connect(self.onRestartStartStopTimer)
+        self.ui.endOffsetEdit.textEdited.connect(self.onRestartStartStopTimer)
+        self.ui.startTimeEdit.editingFinished.connect(self.onRestartStartStopTimer)
+        self.ui.endTimeEdit.editingFinished.connect(self.onRestartStartStopTimer)
         header_view = self.ui.topicPartitionSourceTree.header()
         header_view.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header_view.setStretchLastSection(False)
@@ -109,6 +121,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         elif new_index == 3:
             self.ui.endOffsetEdit.hide()
             self.ui.endTimeEdit.show()
+        self.onRestartStartStopTimer()
 
     def on_change_start_at(self, new_index):
         if new_index == 0 or new_index == 1:
@@ -120,6 +133,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         elif new_index == 3:
             self.ui.startOffsetEdit.hide()
             self.ui.startTimeEdit.show()
+        self.onRestartStartStopTimer()
 
     def on_tree_node_selection(self, newSelection, oldSelection):
         if len(newSelection) == 0:
@@ -219,12 +233,56 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         enable_new_partitions = True
         if self.ui.enableDefaultComboBox.currentIndex() == 1:
             enable_new_partitions = False
-        self.topicPartitionModel.update_topics(known_topics, enable_new_partitions)
+        self.topicPartitionModel.update_topics(known_topics, self.current_start, self.current_stop, enable_new_partitions)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.config.setValue("kafka_address", self.ui.brokerAddressEdit.text())
         self.config.setValue("enable_default", self.ui.enableDefaultComboBox.currentIndex())
         event.accept()
+
+    def onRestartStartStopTimer(self):
+        self.editStartStopTimer.start(500)
+
+    def onEditStartStopTimer(self):
+        new_start = self.getStartCondition()
+        if self.current_start != new_start:
+            self.topicPartitionModel.setNewStart(new_start)
+            self.current_start = new_start
+
+        new_stop = self.getStopCondition()
+        if self.current_stop != new_stop:
+            self.topicPartitionModel.setNewStop(new_stop)
+            self.current_start = new_stop
+
+    def getStartCondition(self):
+        if self.ui.startAtSelector.currentIndex() == 0:
+            return PartitionOffset.BEGINNING
+        elif self.ui.startAtSelector.currentIndex() == 1:
+            return PartitionOffset.END
+        elif self.ui.startAtSelector.currentIndex() == 2:
+            return_int = 0
+            try:
+                return_int = int(self.ui.startOffsetEdit.text())
+            except ValueError:
+                pass
+            return return_int
+        elif self.ui.startAtSelector.currentIndex() == 3:
+            return self.ui.startTimeEdit.dateTime()
+
+    def getStopCondition(self):
+        if self.ui.endAtSelector.currentIndex() == 0:
+            return PartitionOffset.NEVER
+        elif self.ui.endAtSelector.currentIndex() == 1:
+            return PartitionOffset.END
+        elif self.ui.endAtSelector.currentIndex() == 2:
+            return_int = 0
+            try:
+                return_int = int(self.ui.endOffsetEdit.text())
+            except ValueError:
+                pass
+            return return_int
+        elif self.ui.endAtSelector.currentIndex() == 3:
+            return self.ui.endTimeEdit.dateTime()
 
 
 if __name__ == "__main__":
