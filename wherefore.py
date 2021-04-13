@@ -7,11 +7,14 @@ from datetime import datetime, timezone
 
 
 def extract_point(point: str):
-    if match := re.match("(?P<timestamp>\d+)s$", point):
+    match = re.match("(?P<timestamp>\d+)s$", point)
+    if match != None:
         return datetime.fromtimestamp(int(match["timestamp"]), tz=timezone.utc)
-    if match := re.match("(?P<offset_str>(?:never)|(?:end)|(?:beginning))$", point):
+    match = re.match("(?P<offset_str>(?:never)|(?:end)|(?:beginning))$", point)
+    if match != None:
         return {"end": PartitionOffset.END, "beginning": PartitionOffset.BEGINNING, "never": PartitionOffset.NEVER}[match["offset_str"]]
-    if match := re.match("(?P<offset>\d+)$", point):
+    match = re.match("(?P<offset>\d+)$", point)
+    if match != None:
         return int(match["offset"])
     try:
         time_point = datetime.fromisoformat(point)
