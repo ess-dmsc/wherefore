@@ -164,7 +164,7 @@ class PartitionItem:
 
     def start_message_monitoring(self):
         if self._broker is not None and self._broker != "" and self._enabled:
-            launch_tracker = lambda broker, topic, partition: KafkaMessageTracker(broker, topic, partition, self._start, self._stop)
+            launch_tracker = lambda broker, topic, partition: KafkaMessageTracker(broker, topic, partition, (self._start, None), self._stop)
             self._message_tracker_future = self._thread_pool.submit(launch_tracker, self._broker, self._parent.name, self.partition_id)
 
     def _check_message_tracker_status(self):

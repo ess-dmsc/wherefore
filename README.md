@@ -7,27 +7,27 @@ Simple tool for listing known flatbuffer sources on a Kafka topic.
 
 ```
 python wherefore.py -h
-usage: wherefore.py [-h] -b BROKER -t TOPIC [-p PARTITION] [-s START] [-e END]
+usage: wherefore.py [-h] -b BROKER (-t TOPIC | -l) [-p PARTITION] [-s START] [-e END]
 
 optional arguments:
   -h, --help            show this help message and exit
+  -t TOPIC, --topic TOPIC
+                        Topic name to listen to.
+  -l, --list            List the topics on the current Kafka cluster and exit. Does not work with the `-t`, `-s`, `-p` and `-e`
+                        arguments.
   -p PARTITION, --partition PARTITION
                         Partition to connect to.
   -s START, --start START
-                        Where should consumption start? Takes a datetime (e.g.
-                        `-s 2012-01-01 12:30:12`), timestamp (e.g. `-s
-                        1611167278s`), offset (e.g. `-s 1548647`) or one of
-                        the following strings: `beginning`, `end`.
-  -e END, --end END     Where should consumption stop/end? Takes a datetime
-                        (e.g. `-s 2012-01-01 12:30:12`), timestamp (e.g. `-s
-                        1611167278s`), offset (e.g. `-s 1548647`) or one of
-                        the following strings: `end`, `never`.
+                        Where should consumption start? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s
+                        1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `beginning`, `end`. Each one
+                        of these can have an integer modifier at the end which offsets the start location. E.g. `-s end-10` or
+                        `-s "2012-01-01 12:30:12+500"`
+  -e END, --end END     Where should consumption stop/end? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g.
+                        `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.
 
 required arguments:
   -b BROKER, --broker BROKER
                         Address of the kafka broker.
-  -t TOPIC, --topic TOPIC
-                        Topic name to listen to.
 ```
 
 The default partition if none is selected is _0_. It is possible to use different types of start and stop criteria. E.g.:

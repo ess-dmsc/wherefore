@@ -1,5 +1,5 @@
 from threading import Thread
-from typing import Union, Dict
+from typing import Union, Dict, Optional, Tuple
 from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
 from kafka import KafkaConsumer, TopicPartition
@@ -65,7 +65,10 @@ def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queu
 
 
 class KafkaMessageTracker:
-    def __init__(self, broker: str, topic: str, partition: int = -1, start: Union[int, datetime, PartitionOffset] = PartitionOffset.END, stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER):
+    def __init__(self, broker: str, topic: str, partition: int = -1, start: Tuple[Union[int, datetime, PartitionOffset], Optional[int]] = PartitionOffset.END, stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER):
+        self.to_thread = Queue()
+        self.from_thread = Queue(maxsize=100)
+
         consumer = KafkaConsumer(bootstrap_servers=broker, fetch_max_bytes=52428800 * 6, consumer_timeout_ms=100)
         existing_topics = consumer.topics()
         self.current_msg = None
@@ -79,21 +82,51 @@ class KafkaMessageTracker:
             raise RuntimeError(f"Partition {partition} for topic \"{topic}\" does not exist.")
         topic_partition = TopicPartition(topic, partition)
         consumer.assign([topic_partition, ])
-        if start == PartitionOffset.BEGINNING:
-            consumer.seek_to_beginning()
-        elif start == PartitionOffset.END or start == PartitionOffset.NEVER:
-            consumer.seek_to_end()
-        elif type(start) is int:
-            first_offset = consumer.beginning_offsets([topic_partition, ])
-            if first_offset[topic_partition] > start:
-                consumer.seek_to_beginning()
+        first_offset = consumer.beginning_offsets([topic_partition])[topic_partition]
+        last_offset = consumer.end_offsets([topic_partition])[topic_partition]
+        origin_offset = None
+        offset_to_offset = start[1]
+        if start[0] == PartitionOffset.BEGINNING:
+            origin_offset = first_offset
+            # consumer.seek_to_beginning()
+            # if type(start[1]) == int and start[1] > 0 and first_offset + start[1] <= last_offset:
+            #     consumer.seek(partition=topic_partition, offset=first_offset + start[1])
+        elif start[0] == PartitionOffset.END or start == PartitionOffset.NEVER:
+            origin_offset = last_offset
+            # consumer.seek_to_end()
+            # if type(start[1]) == int and start[1] < 0 and last_offset + start[1] >= first_offset:
+            #     consumer.seek(partition=topic_partition, offset=first_offset + start[1])
+        elif type(start[0]) is int:
+            if first_offset > start[0]:
+                origin_offset = first_offset
+                # consumer.seek_to_beginning()
+            elif last_offset < start[0]:
+                origin_offset = last_offset
             else:
-                consumer.seek(partition=topic_partition, offset=start)
-        elif type(start) is datetime:
-            found_offsets = consumer.offsets_for_times({topic_partition: int(start.timestamp() * 1000)})
-            consumer.seek(partition=topic_partition, offset=found_offsets[topic_partition].offset)
-        self.to_thread = Queue()
-        self.from_thread = Queue(maxsize=100)
+                origin_offset = start[0]
+            #     consumer.seek_to_end()
+            # else:
+            #     consumer.seek(partition=topic_partition, offset=start[0])
+        elif type(start[0]) is datetime:
+            found_offsets = consumer.offsets_for_times({topic_partition: int(start[0].timestamp() * 1000)})
+            if found_offsets[topic_partition] is None:
+                origin_offset = last_offset
+            else:
+                origin_offset = found_offsets[topic_partition].offset
+
+            # if type(start[1]) == int:
+            #     used_offset += start[1]
+            # consumer.seek(partition=topic_partition, offset=used_offset)
+        else:
+            raise RuntimeError("Unknown start offset configured.")
+
+        if offset_to_offset is not None:
+            origin_offset += offset_to_offset
+            if origin_offset < first_offset:
+                origin_offset = first_offset
+            elif origin_offset > last_offset:
+                origin_offset = last_offset
+        consumer.seek(partition=topic_partition, offset=origin_offset)
         self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer": consumer, "stop": stop, "in_queue": self.to_thread, "out_queue": self.from_thread, "stop": stop, "topic_partition": topic_partition})
         self.thread.start()
 
