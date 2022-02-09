@@ -1,5 +1,5 @@
 from streaming_data_types.utils import get_schema as get_schema
-from streaming_data_types import deserialise_ev42,deserialise_hs00, deserialise_wrdn, deserialise_f142, deserialise_ns10, deserialise_pl72, deserialise_6s4t, deserialise_x5f2, deserialise_ep00, deserialise_tdct, deserialise_rf5k, deserialise_answ, deserialise_ndar
+from streaming_data_types import deserialise_ev42,deserialise_hs00, deserialise_wrdn, deserialise_f142, deserialise_ns10, deserialise_pl72, deserialise_6s4t, deserialise_x5f2, deserialise_ep00, deserialise_tdct, deserialise_rf5k, deserialise_answ, deserialise_ndar, deserialise_ADAr
 from wherefore.MonitorMessage import MonitorMessage
 from datetime import datetime, timezone
 from typing import Tuple
@@ -71,6 +71,11 @@ def ndar_extractor(data: bytes):
     return "AreaDetector_data", datetime.fromtimestamp(extracted.timestamp + 631152000, tz=timezone.utc)
 
 
+def adar_extractor(data: bytes):
+    extracted = deserialise_ADAr(data)
+    return extracted.source_name, extracted.timestamp
+
+
 def rf5k_extractor(data: bytes):
     return "EPICS forwarder", None
 
@@ -100,6 +105,7 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime]:
         "answ": answ_extractor,
         "wrdn": wrdn_extractor,
         "NDAr": ndar_extractor,
+        "ADAr": adar_extractor,
         "rf5k": rf5k_extractor,
         "json": json_extractor,
         "mo01": mo01_extractor,
