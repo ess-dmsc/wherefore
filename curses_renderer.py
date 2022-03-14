@@ -113,7 +113,7 @@ class CursesRenderer:
         info_rows.append(f"Current msg. size: {current_message.size:>7d}    Message rate: {current_source.messages_per_second:12.3f}/s")
         info_rows.append(
             f"Received messages: {current_source.processed_messages:7d}    Data rate: {current_source.bytes_per_second:11.0f} bytes/s")
-        info_rows.append("")
+        info_rows.append(f"Data: {current_message.data}")
         info_rows.append(timestamp_format.format("Type", "Timestamp", "Age (s)"))
         info_rows.append("-"*80)
         info_rows.append(timestamp_format.format("Receive time", time_to_str(current_message.local_timestamp), get_time_diff(now, current_message.local_timestamp)))
