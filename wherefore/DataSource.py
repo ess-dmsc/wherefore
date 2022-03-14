@@ -7,7 +7,8 @@ class DataSource:
     def __init__(self, source_name: str, source_type: str, start_time: datetime):
         self._source_name = source_name
         self._source_type = source_type
-        self._processed_messages = 0
+        self._processed_messages: int = 0
+        self._bytes_received: int = 0
         self._start_time = start_time
         self._last_message: Optional[Message] = None
         self._first_offset: Optional[int] = None
@@ -16,6 +17,7 @@ class DataSource:
     def process_message(self, msg: Message):
         self._processed_messages += 1
         self._last_message = msg
+        self._bytes_received += msg.size
         if self._first_offset is None:
             self._first_offset = msg.offset
             if msg.timestamp is None:
@@ -78,4 +80,11 @@ class DataSource:
     def last_message(self):
         return self._last_message
 
+    @property
+    def bytes_received(self):
+        return self._bytes_received
 
+    @property
+    def bytes_per_second(self):
+        time_diff = datetime.now(tz=timezone.utc) - self._start_time
+        return self._bytes_received / time_diff.total_seconds()

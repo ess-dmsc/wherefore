@@ -128,6 +128,7 @@ class Message:
         self._kafka_time = datetime.fromtimestamp(kafka_msg.timestamp / 1e3, tz=timezone.utc)
         self._value = kafka_msg.value
         self._offset = kafka_msg.offset
+        self._size = len(kafka_msg.value)
 
     @property
     def source_hash(self) -> bytes:
@@ -157,3 +158,6 @@ class Message:
     def offset(self):
         return self._offset
 
+    @property
+    def size(self):
+        return self._size
