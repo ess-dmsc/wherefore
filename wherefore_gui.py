@@ -181,6 +181,8 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                     self.ui.lastMsgTimeValue.setText(datetime_to_str(c_source.last_message.timestamp, now))
 
                     self.ui.consumptionRateValue.setText(f"{c_source.processed_per_second:.2f}/s")
+                    self.ui.currentMsgSizeValue.setText(f"{c_source.last_message.size:.0f} bytes")
+                    self.ui.dataRateValue.setText(f"{c_source.bytes_per_second:.0f} bytes/s")
                     self.ui.currentOffsetValue.setText(f"{c_source.last_message.offset}")
                     self.ui.firstOffsetValue.setText(f"{c_source.first_offset}")
                     self.ui.messageRateValue.setText(f"{c_source.messages_per_second:.2f}/s")
@@ -194,6 +196,8 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.ui.lastMsgKafkaTimeValue.setText("n/a")
         self.ui.lastMsgReceiveTimeValue.setText("n/a")
         self.ui.lastMsgTimeValue.setText("n/a")
+        self.ui.currentMsgSizeValue.setText("n/a")
+        self.ui.dataRateValue.setText("n/a")
 
         self.ui.consumptionRateValue.setText("n/a")
         self.ui.currentOffsetValue.setText("n/a")
