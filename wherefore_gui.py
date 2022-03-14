@@ -230,6 +230,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                 else:
                     self.ui.brokerLed.turn_on()
                     self.updateTopicTree(result)
+                self.topicUpdateFuture = self.thread_pool.submit(get_topic_partitions, self.ui.brokerAddressEdit.text())
             except ValueError:
                 pass  #Ignore
 
