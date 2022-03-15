@@ -18,23 +18,18 @@ def ev42_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
 
 def hs00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_hs00(data)
-    dims_string = extracted["dims"][0]
-    for i in range(1, len(extracted["dims"])):
-        dims_string += "x" + str(extracted["dims"][i])
-    return extracted.source, datetime.fromtimestamp(extracted.timestamp / 1e9, tz=timezone.utc), f"Histogram dimensions: {dims_string}"
+    dims_string = extracted["dim_metadata"][0]["length"]
+    for i in range(1, len(extracted["dim_metadata"])):
+        dims_string += "x" + str(extracted["dim_metadata"][i]["length"])
+    return extracted["source"], datetime.fromtimestamp(extracted["timestamp"] / 1e9, tz=timezone.utc), f"Histogram dimensions: {dims_string}"
 
 
 def f142_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_f142(data)
-    if isinstance(extracted.value, np.ndarray):
-        if len(extracted.value.shape) == 0:
-            value_string = f"Value: {extracted.value}"
-        else:
-            value_string = f"Dimensions: {extracted.value.shape[0]}"
-            for i in range(1, len()):
-                value_string += f"x{extracted.value.shape[i]}"
-    else:
+    if len(extracted.value.shape) == 0:
         value_string = f"Value: {extracted.value}"
+    else:
+        value_string = f"Nr of elements: {len(extracted.value)}"
     return extracted.source_name, datetime.fromtimestamp(extracted.timestamp_unix_ns / 1e9, tz=timezone.utc), value_string
 
 
@@ -81,9 +76,9 @@ def rf5k_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
 
 def answ_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_answ(data)
-    type_map = {ActionType.StartJob: "Start job", ActionType: "Set stop time"}
+    type_map = {ActionType.StartJob: "Start job", ActionType.SetStopTime: "Set stop time"}
     result_map = {ActionOutcome.Failure: "failed", ActionOutcome.Success: "was successfull!"}
-    return extracted.service_id, None, f"{type_map[extracted.ActionType]} command {result_map[extracted.outcome]}"
+    return extracted.service_id, None, f"{type_map[extracted.action]} command {result_map[extracted.outcome]}"
 
 
 def wrdn_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
@@ -142,10 +137,11 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
         "mo01": mo01_extractor,
     }
     try:
-        name, timestamp, data = type_extractor_map[message_type](message_data)
-        return message_type, name, timestamp, data
+        extractor = type_extractor_map[message_type]
     except KeyError:
-        return "Unknown", "Unknown", None
+        return "Unknown", "Unknown", None, "No data"
+    return message_type, *extractor(message_data)
+
 
 
 class Message:
