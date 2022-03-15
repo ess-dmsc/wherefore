@@ -66,5 +66,11 @@ def test_two_more_items_sel_456(selection):
     nr_of_rows = 5
     items = list(range(7))
     rows, selected_row = generate_list(items, nr_of_rows, selection)
-    assert rows == ["↑", 3, 4, 5, 6, ]
+    assert rows == [
+        "↑",
+        3,
+        4,
+        5,
+        6,
+    ]
     assert selected_row == selection - 2

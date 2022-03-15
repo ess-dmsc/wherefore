@@ -26,7 +26,13 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
     def disable_all(self):
         self.enable_all(False)
 
-    def update_topics(self, known_topics, start: typing.Union[int, datetime, PartitionOffset], stop: typing.Union[int, datetime, PartitionOffset], enable_new_partition: bool = True):
+    def update_topics(
+        self,
+        known_topics,
+        start: typing.Union[int, datetime, PartitionOffset],
+        stop: typing.Union[int, datetime, PartitionOffset],
+        enable_new_partition: bool = True,
+    ):
         for c_topic in known_topics:
             if not self.root_item.topic_is_known(c_topic["name"]):
                 insert_loc = self.root_item.get_topic_insert_location(c_topic["name"])
@@ -37,8 +43,22 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
             for c_partition in c_topic["partitions"]:
                 if not topic_item.partition_is_known(c_partition):
                     insert_loc = topic_item.get_partition_insert_location(c_partition)
-                    self.beginInsertRows(self.index(self.root_item.get_topic_location(topic_item.name), 0, QModelIndex()), insert_loc, insert_loc)
-                    topic_item.add_partition(c_partition, self.kafka_broker, start, stop, enable_new_partition)
+                    self.beginInsertRows(
+                        self.index(
+                            self.root_item.get_topic_location(topic_item.name),
+                            0,
+                            QModelIndex(),
+                        ),
+                        insert_loc,
+                        insert_loc,
+                    )
+                    topic_item.add_partition(
+                        c_partition,
+                        self.kafka_broker,
+                        start,
+                        stop,
+                        enable_new_partition,
+                    )
                     self.endInsertRows()
 
     def check_for_sources(self):
@@ -51,9 +71,15 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
                 if known_sources is None:
                     continue
                 for source in known_sources.values():
-                    if not c_partition.source_is_known(source.source_name, source.source_type):
-                        source_location = c_partition.get_source_insert_location(source.source_name, source.source_type)
-                        self.beginInsertRows(partition_index, source_location, source_location)
+                    if not c_partition.source_is_known(
+                        source.source_name, source.source_type
+                    ):
+                        source_location = c_partition.get_source_insert_location(
+                            source.source_name, source.source_type
+                        )
+                        self.beginInsertRows(
+                            partition_index, source_location, source_location
+                        )
                         c_partition.add_source(source.source_name, source.source_type)
                         self.endInsertRows()
 
@@ -67,7 +93,11 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
         if not index.isValid():
             return QVariant()
 
-        if index.column() == 1 and role == Qt.CheckStateRole and isinstance(index.internalPointer(), PartitionItem):
+        if (
+            index.column() == 1
+            and role == Qt.CheckStateRole
+            and isinstance(index.internalPointer(), PartitionItem)
+        ):
             if index.internalPointer().enabled:
                 return Qt.CheckState(Qt.Checked)
             else:

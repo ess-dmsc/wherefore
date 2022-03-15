@@ -26,7 +26,13 @@ class HighLowOffset:
         self.high = high
 
 
-def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queue: Queue, out_queue: Queue, topic_partition):
+def thread_function(
+    consumer: KafkaConsumer,
+    stop: Union[datetime, int],
+    in_queue: Queue,
+    out_queue: Queue,
+    topic_partition,
+):
     known_sources: Dict[bytes, DataSource] = {}
     start_time = datetime.now(tz=timezone.utc)
     update_timer = datetime.now(tz=timezone.utc)
@@ -36,13 +42,23 @@ def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queu
             new_msg = Message(kafka_msg)
             if type(stop) is int and new_msg.offset > stop:
                 pass
-            elif type(stop) is datetime and new_msg.timestamp is not None and new_msg.timestamp > stop:
+            elif (
+                type(stop) is datetime
+                and new_msg.timestamp is not None
+                and new_msg.timestamp > stop
+            ):
                 pass
-            elif type(stop) is datetime and new_msg.timestamp is None and new_msg.kafka_timestamp > stop:
+            elif (
+                type(stop) is datetime
+                and new_msg.timestamp is None
+                and new_msg.kafka_timestamp > stop
+            ):
                 pass
             else:
                 if not new_msg.source_hash in known_sources:
-                    known_sources[new_msg.source_hash] = DataSource(new_msg.source_name, new_msg.message_type, start_time)
+                    known_sources[new_msg.source_hash] = DataSource(
+                        new_msg.source_name, new_msg.message_type, start_time
+                    )
                 known_sources[new_msg.source_hash].process_message(new_msg)
             messages_ctr += 1
             if messages_ctr == CHECK_FOR_MSG_INTERVAL:
@@ -56,8 +72,16 @@ def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queu
             update_timer = now
             try:
                 out_queue.put(copy(known_sources), block=False)
-                low_offset = consumer.beginning_offsets([topic_partition, ])[topic_partition]
-                high_offset = consumer.end_offsets([topic_partition, ])[topic_partition]
+                low_offset = consumer.beginning_offsets(
+                    [
+                        topic_partition,
+                    ]
+                )[topic_partition]
+                high_offset = consumer.end_offsets(
+                    [
+                        topic_partition,
+                    ]
+                )[topic_partition]
                 out_queue.put(HighLowOffset(low_offset, high_offset))
             except Full:
                 pass  # Do nothing
@@ -65,23 +89,42 @@ def thread_function(consumer: KafkaConsumer, stop: Union[datetime, int], in_queu
 
 
 class KafkaMessageTracker:
-    def __init__(self, broker: str, topic: str, partition: int = -1, start: Tuple[Union[int, datetime, PartitionOffset], Optional[int]] = PartitionOffset.END, stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER):
+    def __init__(
+        self,
+        broker: str,
+        topic: str,
+        partition: int = -1,
+        start: Tuple[
+            Union[int, datetime, PartitionOffset], Optional[int]
+        ] = PartitionOffset.END,
+        stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER,
+    ):
         self.to_thread = Queue()
         self.from_thread = Queue(maxsize=100)
 
-        consumer = KafkaConsumer(bootstrap_servers=broker, fetch_max_bytes=52428800 * 6, consumer_timeout_ms=100)
+        consumer = KafkaConsumer(
+            bootstrap_servers=broker,
+            fetch_max_bytes=52428800 * 6,
+            consumer_timeout_ms=100,
+        )
         existing_topics = consumer.topics()
         self.current_msg = None
         self.current_offset_limits = HighLowOffset(-1, -1)
         if topic not in existing_topics:
-            raise RuntimeError(f"Topic \"{topic}\" does not exist.")
+            raise RuntimeError(f'Topic "{topic}" does not exist.')
         existing_partitions = consumer.partitions_for_topic(topic)
         if partition == -1:
             partition = existing_partitions.pop()
         elif partition not in existing_partitions:
-            raise RuntimeError(f"Partition {partition} for topic \"{topic}\" does not exist.")
+            raise RuntimeError(
+                f'Partition {partition} for topic "{topic}" does not exist.'
+            )
         topic_partition = TopicPartition(topic, partition)
-        consumer.assign([topic_partition, ])
+        consumer.assign(
+            [
+                topic_partition,
+            ]
+        )
         first_offset = consumer.beginning_offsets([topic_partition])[topic_partition]
         last_offset = consumer.end_offsets([topic_partition])[topic_partition]
         origin_offset = None
@@ -108,7 +151,9 @@ class KafkaMessageTracker:
             # else:
             #     consumer.seek(partition=topic_partition, offset=start[0])
         elif type(start[0]) is datetime:
-            found_offsets = consumer.offsets_for_times({topic_partition: int(start[0].timestamp() * 1000)})
+            found_offsets = consumer.offsets_for_times(
+                {topic_partition: int(start[0].timestamp() * 1000)}
+            )
             if found_offsets[topic_partition] is None:
                 origin_offset = last_offset
             else:
@@ -127,7 +172,18 @@ class KafkaMessageTracker:
             elif origin_offset > last_offset:
                 origin_offset = last_offset
         consumer.seek(partition=topic_partition, offset=origin_offset)
-        self.thread = Thread(target=thread_function, daemon=True, kwargs={"consumer": consumer, "stop": stop, "in_queue": self.to_thread, "out_queue": self.from_thread, "stop": stop, "topic_partition": topic_partition})
+        self.thread = Thread(
+            target=thread_function,
+            daemon=True,
+            kwargs={
+                "consumer": consumer,
+                "stop": stop,
+                "in_queue": self.to_thread,
+                "out_queue": self.from_thread,
+                "stop": stop,
+                "topic_partition": topic_partition,
+            },
+        )
         self.thread.start()
 
     def stop_thread(self):
@@ -154,6 +210,3 @@ class KafkaMessageTracker:
     def get_current_edge_offsets(self) -> HighLowOffset:
         self._get_messages()
         return self.current_offset_limits
-
-
-

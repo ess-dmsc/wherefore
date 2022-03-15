@@ -6,7 +6,7 @@ def generate_list(items: List, list_rows: int, selection: int):
     return_list = []
     arrows_at_end = False
     arrows_at_start = False
-    lower_copy_index = int(selection - floor(list_rows/2))
+    lower_copy_index = int(selection - floor(list_rows / 2))
     if lower_copy_index < 0 or len(items) <= list_rows:
         lower_copy_index = 0
     upper_copy_index = lower_copy_index + list_rows
@@ -27,4 +27,3 @@ def generate_list(items: List, list_rows: int, selection: int):
     if arrows_at_start:
         return_list[0] = "↑"
     return return_list, selection - lower_copy_index
-

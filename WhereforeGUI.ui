@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>858</width>
-    <height>597</height>
+    <height>631</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -274,7 +274,7 @@
           <property name="title">
            <string>Source info</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0,0,0">
            <property name="spacing">
             <number>-1</number>
            </property>
@@ -365,6 +365,20 @@
                </property>
               </widget>
              </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="currentMsgSizeLabel">
+               <property name="text">
+                <string>Current msg. size</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="currentMsgSizeValue">
+               <property name="text">
+                <string>n/a</string>
+               </property>
+              </widget>
+             </item>
              <item row="3" column="0">
               <widget class="QLabel" name="receivedMessagesLabel">
                <property name="text">
@@ -379,17 +393,17 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
-              <widget class="QLabel" name="consumptionRateValue">
-               <property name="text">
-                <string>n/a</string>
-               </property>
-              </widget>
-             </item>
              <item row="4" column="0">
               <widget class="QLabel" name="consumptionRateLabel">
                <property name="text">
                 <string>Consumption rate</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLabel" name="consumptionRateValue">
+               <property name="text">
+                <string>n/a</string>
                </property>
               </widget>
              </item>
@@ -421,15 +435,31 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="currentMsgSizeLabel">
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <widget class="QLabel" name="dataLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>Current msg. size</string>
+                <string>Data:</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QLabel" name="currentMsgSizeValue">
+             <item>
+              <widget class="QLabel" name="dataValue">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
                 <string>n/a</string>
                </property>
