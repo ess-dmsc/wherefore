@@ -3,7 +3,9 @@ from typing import Union, Dict, List, Optional
 from kafka.errors import NoBrokersAvailable
 
 
-def get_topic_partitions(broker: str) -> Optional[List[Dict[str, Union[str, List[int]]]]]:
+def get_topic_partitions(
+    broker: str,
+) -> Optional[List[Dict[str, Union[str, List[int]]]]]:
     try:
         consumer = KafkaConsumer(bootstrap_servers=broker)
         known_topics = consumer.topics()
@@ -15,4 +17,3 @@ def get_topic_partitions(broker: str) -> Optional[List[Dict[str, Union[str, List
         return list_of_topics
     except NoBrokersAvailable:
         return None
-

@@ -29,7 +29,7 @@ def draw_full_line(window, row, text, invert=False):
         pass
     elif print_width > width:
         print_width = width
-        text = text[0: print_width - 3] + "..."
+        text = text[0 : print_width - 3] + "..."
     draw_function = window.insstr
     if len(text) < width:
         draw_function = window.addstr
@@ -76,7 +76,9 @@ class CursesRenderer:
         height, width = self.screen.getmaxyx()
         used_width = DEFAULT_LIST_WIDTH
         prototype_line = "{:^6.6s}| {:40.40s}| {:30.30s}"
-        draw_full_line(self.screen, 2, prototype_line.format("Id", "Name", "Last timestamp"))
+        draw_full_line(
+            self.screen, 2, prototype_line.format("Id", "Name", "Last timestamp")
+        )
         self.screen.addstr(3, 0, "-" * used_width)
         if width < used_width:
             used_width = width
@@ -86,15 +88,26 @@ class CursesRenderer:
         sources_win = curses.newwin(used_height, used_width, 4, 0)
         win_height, win_width = sources_win.getmaxyx()
         available_rows = win_height
-        sources_to_list, selection_row = generate_list(self.known_sources, available_rows, self.selected_item)
+        sources_to_list, selection_row = generate_list(
+            self.known_sources, available_rows, self.selected_item
+        )
         for i, item in enumerate(sources_to_list):
             selected = False
             if i == selection_row:
                 selected = True
             if type(item) is str:
-                draw_full_line(sources_win, i, "  " + item*3)
+                draw_full_line(sources_win, i, "  " + item * 3)
             else:
-                draw_full_line(sources_win, i, prototype_line.format(item.source_type, item.source_name, time_to_str(item.last_timestamp)), selected)
+                draw_full_line(
+                    sources_win,
+                    i,
+                    prototype_line.format(
+                        item.source_type,
+                        item.source_name,
+                        time_to_str(item.last_timestamp),
+                    ),
+                    selected,
+                )
         sources_win.refresh()
 
     def draw_selected_source_info(self):
@@ -108,19 +121,42 @@ class CursesRenderer:
         timestamp_format = "{:20.20s} | {:30.30s} | {:10.10s}"
 
         first_ts_string = time_to_str(current_source.first_timestamp)
-        info_rows.append(f"First offset: {current_source.first_offset:>12d}    First timestamp: {first_ts_string}")
-        info_rows.append(f"Current offset: {current_message.offset:>10d}    Consumption rate: {current_source.processed_per_second:8.3f}/s")
-        info_rows.append(f"Current msg. size: {current_message.size:>7d}    Message rate: {current_source.messages_per_second:12.3f}/s")
         info_rows.append(
-            f"Received messages: {current_source.processed_messages:7d}    Data rate: {current_source.bytes_per_second:11.0f} bytes/s")
-        info_rows.append("")
+            f"First offset: {current_source.first_offset:>12d}    First timestamp: {first_ts_string}"
+        )
+        info_rows.append(
+            f"Current offset: {current_message.offset:>10d}    Consumption rate: {current_source.processed_per_second:8.3f}/s"
+        )
+        info_rows.append(
+            f"Current msg. size: {current_message.size:>7d}    Message rate: {current_source.messages_per_second:12.3f}/s"
+        )
+        info_rows.append(
+            f"Received messages: {current_source.processed_messages:7d}    Data rate: {current_source.bytes_per_second:11.0f} bytes/s"
+        )
+        info_rows.append(f"Data: {current_message.data}")
         info_rows.append(timestamp_format.format("Type", "Timestamp", "Age (s)"))
-        info_rows.append("-"*80)
-        info_rows.append(timestamp_format.format("Receive time", time_to_str(current_message.local_timestamp), get_time_diff(now, current_message.local_timestamp)))
-        info_rows.append(timestamp_format.format("Message time", time_to_str(current_message.timestamp),
-                                                 get_time_diff(now, current_message.timestamp)))
-        info_rows.append(timestamp_format.format("Kafka time", time_to_str(current_message.kafka_timestamp),
-                                                 get_time_diff(now, current_message.kafka_timestamp)))
+        info_rows.append("-" * 80)
+        info_rows.append(
+            timestamp_format.format(
+                "Receive time",
+                time_to_str(current_message.local_timestamp),
+                get_time_diff(now, current_message.local_timestamp),
+            )
+        )
+        info_rows.append(
+            timestamp_format.format(
+                "Message time",
+                time_to_str(current_message.timestamp),
+                get_time_diff(now, current_message.timestamp),
+            )
+        )
+        info_rows.append(
+            timestamp_format.format(
+                "Kafka time",
+                time_to_str(current_message.kafka_timestamp),
+                get_time_diff(now, current_message.kafka_timestamp),
+            )
+        )
         if height > DEFAULT_LIST_ROWS + 3:
             self.screen.addstr(13, 0, "-" * DEFAULT_LIST_WIDTH)
         remaining_height = height - 14
@@ -154,4 +190,3 @@ class CursesRenderer:
         self.draw_sources_list()
         self.draw_selected_source_info()
         self.screen.refresh()
-

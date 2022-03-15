@@ -14,13 +14,22 @@ def extract_point(point: str) -> Tuple[Union[datetime, int, str], Optional[int]]
         offset_int = None
         if match["offset"] is not None:
             offset_int = int(match["offset"])
-        return datetime.fromtimestamp(int(match["timestamp"]), tz=timezone.utc), offset_int
-    match = re.match("(?P<offset_str>(?:never)|(?:end)|(?:beginning))(?P<offset>[+-]\d+)?$", point)
+        return (
+            datetime.fromtimestamp(int(match["timestamp"]), tz=timezone.utc),
+            offset_int,
+        )
+    match = re.match(
+        "(?P<offset_str>(?:never)|(?:end)|(?:beginning))(?P<offset>[+-]\d+)?$", point
+    )
     if match != None:
         offset_int = None
         if match["offset"] is not None:
             offset_int = int(match["offset"])
-        return {"end": PartitionOffset.END, "beginning": PartitionOffset.BEGINNING, "never": PartitionOffset.NEVER}[match["offset_str"]], offset_int
+        return {
+            "end": PartitionOffset.END,
+            "beginning": PartitionOffset.BEGINNING,
+            "never": PartitionOffset.NEVER,
+        }[match["offset_str"]], offset_int
     match = re.match("(?P<offset_int>\d+)(?P<offset_to_offset>[+-]\d+)?$", point)
     if match != None:
         return_int = int(match["offset_int"])
@@ -37,20 +46,22 @@ def extract_point(point: str) -> Tuple[Union[datetime, int, str], Optional[int]]
             time_point = time_point.replace(tzinfo=timezone.utc)
         return time_point, offset_int
     except ValueError:
-        raise RuntimeError(f"Unable to convert timestamp, offset, or offset string from the argument: {point}")
+        raise RuntimeError(
+            f"Unable to convert timestamp, offset, or offset string from the argument: {point}"
+        )
 
 
 def extract_start(start: str):
     start_point = extract_point(start)
     if type(start_point[0]) is PartitionOffset and start_point == PartitionOffset.NEVER:
-        raise RuntimeError("\"never\" is not a valid start offset.")
+        raise RuntimeError('"never" is not a valid start offset.')
     return start_point
 
 
 def extract_end(end: str):
     end_point = extract_point(end)
     if type(end_point[0]) is PartitionOffset and end_point == PartitionOffset.BEGINNING:
-        raise RuntimeError("\"beginning\" is not a valid stop/end offset.")
+        raise RuntimeError('"beginning" is not a valid stop/end offset.')
     return end_point[0]
 
 
@@ -64,7 +75,13 @@ def print_topics(broker: str):
 
 def main(broker: str, topic: str, partition: int, start: str, end: str):
     try:
-        tracker = KafkaMessageTracker(broker, topic, partition=partition, start=extract_start(start), stop=extract_end(end))
+        tracker = KafkaMessageTracker(
+            broker,
+            topic,
+            partition=partition,
+            start=extract_start(start),
+            stop=extract_end(end),
+        )
     except RuntimeError as e:
         print(f"Unable to enter run loop due to: {e}")
     renderer = CursesRenderer(topic, partition)
@@ -97,33 +114,33 @@ if __name__ == "__main__":
         "-b", "--broker", type=str, help="Address of the kafka broker.", required=True
     )
 
-    mutex_args.add_argument(
-        "-t", "--topic", type=str, help="Topic name to listen to."
-    )
+    mutex_args.add_argument("-t", "--topic", type=str, help="Topic name to listen to.")
 
     mutex_args.add_argument(
         "-l",
         "--list",
         action="store_true",
-        help="List the topics on the current Kafka cluster and exit. Does not work with the `-t`, `-s`, `-p` and `-e` arguments."
+        help="List the topics on the current Kafka cluster and exit. Does not work with the `-t`, `-s`, `-p` and `-e` arguments.",
     )
 
-    parser.add_argument("-p", "--partition", type=int, help="Partition to connect to.", default=0)
+    parser.add_argument(
+        "-p", "--partition", type=int, help="Partition to connect to.", default=0
+    )
 
     parser.add_argument(
         "-s",
         "--start",
         type=str,
-        help="Where should consumption start? Takes a datetime (e.g. `-s \"2012-01-01 12:30:12\"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `beginning`, `end`. Each one of these can have an integer modifier at the end which offsets the start location. E.g. `-s end-10` or `-s \"2012-01-01 12:30:12+500\"`",
-        default="end"
+        help='Where should consumption start? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `beginning`, `end`. Each one of these can have an integer modifier at the end which offsets the start location. E.g. `-s end-10` or `-s "2012-01-01 12:30:12+500"`',
+        default="end",
     )
 
     parser.add_argument(
         "-e",
         "--end",
         type=str,
-        help="Where should consumption stop/end? Takes a datetime (e.g. `-s \"2012-01-01 12:30:12\"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.",
-        default="never"
+        help='Where should consumption stop/end? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.',
+        default="never",
     )
 
     args = parser.parse_args()

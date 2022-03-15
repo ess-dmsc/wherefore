@@ -5,6 +5,7 @@ from kafka.errors import NoBrokersAvailable
 from wherefore.DataSource import DataSource
 from datetime import datetime
 
+
 class RootItem:
     def __init__(self):
         super().__init__()
@@ -28,7 +29,9 @@ class RootItem:
                 return i
 
     def add_topic(self, topic_name: str):
-        self._topics.insert(self.get_topic_insert_location(topic_name), TopicItem(topic_name, self))
+        self._topics.insert(
+            self.get_topic_insert_location(topic_name), TopicItem(topic_name, self)
+        )
 
     def get_topic(self, topic_name) -> "TopicItem":
         for c_topic in self._topics:
@@ -87,8 +90,18 @@ class TopicItem:
                 return i
         return len(self._partitions)
 
-    def add_partition(self, partition: int, broker: str, start: Union[int, datetime, PartitionOffset], stop: Union[int, datetime, PartitionOffset], enable: bool = True):
-        self._partitions.insert(self.get_partition_insert_location(partition), PartitionItem(partition, self, broker, start, stop, enable))
+    def add_partition(
+        self,
+        partition: int,
+        broker: str,
+        start: Union[int, datetime, PartitionOffset],
+        stop: Union[int, datetime, PartitionOffset],
+        enable: bool = True,
+    ):
+        self._partitions.insert(
+            self.get_partition_insert_location(partition),
+            PartitionItem(partition, self, broker, start, stop, enable),
+        )
 
     def child(self, row: int) -> "PartitionItem":
         return self._partitions[row]
@@ -125,7 +138,15 @@ class TopicItem:
 
 
 class PartitionItem:
-    def __init__(self, partition: int, parent: TopicItem, broker: str, start: Union[int, datetime, PartitionOffset] = PartitionOffset.END, stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER, enable: bool = True):
+    def __init__(
+        self,
+        partition: int,
+        parent: TopicItem,
+        broker: str,
+        start: Union[int, datetime, PartitionOffset] = PartitionOffset.END,
+        stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER,
+        enable: bool = True,
+    ):
         super().__init__()
         self._enabled = enable
         self._partition = partition
@@ -164,17 +185,29 @@ class PartitionItem:
 
     def start_message_monitoring(self):
         if self._broker is not None and self._broker != "" and self._enabled:
-            launch_tracker = lambda broker, topic, partition: KafkaMessageTracker(broker, topic, partition, (self._start, None), self._stop)
-            self._message_tracker_future = self._thread_pool.submit(launch_tracker, self._broker, self._parent.name, self.partition_id)
+            launch_tracker = lambda broker, topic, partition: KafkaMessageTracker(
+                broker, topic, partition, (self._start, None), self._stop
+            )
+            self._message_tracker_future = self._thread_pool.submit(
+                launch_tracker, self._broker, self._parent.name, self.partition_id
+            )
 
     def _check_message_tracker_status(self):
-        if self._enabled and self._message_tracker_future is not None and self._message_tracker_future.done():
+        if (
+            self._enabled
+            and self._message_tracker_future is not None
+            and self._message_tracker_future.done()
+        ):
             try:
                 self._message_tracker = self._message_tracker_future.result()
                 self._message_tracker_future = None
             except NoBrokersAvailable:
                 self.start_message_monitoring()
-        elif self._enabled and self._message_tracker_future is None and self._message_tracker is None:
+        elif (
+            self._enabled
+            and self._message_tracker_future is None
+            and self._message_tracker is None
+        ):
             self.start_message_monitoring()
 
     def get_known_sources(self) -> Optional[Dict[bytes, DataSource]]:
@@ -203,7 +236,10 @@ class PartitionItem:
         return len(self._sources)
 
     def add_source(self, source_name: str, source_type: str):
-        self._sources.insert(self.get_source_insert_location(source_name, source_type), SourceItem(source_name, source_type, self))
+        self._sources.insert(
+            self.get_source_insert_location(source_name, source_type),
+            SourceItem(source_name, source_type, self),
+        )
 
     def child(self, row: int) -> "SourceItem":
         return self._sources[row]
@@ -241,7 +277,10 @@ class PartitionItem:
     @enabled.setter
     def enabled(self, new_value: bool):
         if self._enabled and not new_value:
-            if self._message_tracker_future is not None and self._message_tracker_future.done():
+            if (
+                self._message_tracker_future is not None
+                and self._message_tracker_future.done()
+            ):
                 # Note, this code will fail to stop the thread in some (corner) cases
                 try:
                     self._message_tracker_future.result().stop_thread()
