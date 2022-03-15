@@ -68,11 +68,16 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.topicPartitionModel = TopicPartitionSourceTreeModel()
         self.config = QSettings("ESS", "Wherefore")
         self.setup()
-        self.current_start: Union[int, datetime, PartitionOffset] = self.getStartCondition()
-        self.current_stop: Union[int, datetime, PartitionOffset] = self.getStopCondition()
+        self.current_start: Union[
+            int, datetime, PartitionOffset
+        ] = self.getStartCondition()
+        self.current_stop: Union[
+            int, datetime, PartitionOffset
+        ] = self.getStopCondition()
 
     def setup(self):
         import WhereforeGUI
+
         self.ui = WhereforeGUI.Ui_MainWindow()
         self.ui.setupUi(self)
 
@@ -102,13 +107,17 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         header_view.resizeSection(1, 50)
         self.ui.topicPartitionSourceTree.setHeader(header_view)
 
-        self.ui.topicPartitionSourceTree.selectionModel().selectionChanged.connect(self.on_tree_node_selection)
+        self.ui.topicPartitionSourceTree.selectionModel().selectionChanged.connect(
+            self.on_tree_node_selection
+        )
 
         self.ui.brokerAddressEdit.setText(self.config.value("kafka_address", type=str))
         if len(self.ui.brokerAddressEdit.text()) > 0:
             self.onBrokerEditTimer()
 
-        self.ui.enableDefaultComboBox.setCurrentIndex(self.config.value("enable_default", type=int, defaultValue=0))
+        self.ui.enableDefaultComboBox.setCurrentIndex(
+            self.config.value("enable_default", type=int, defaultValue=0)
+        )
         self.show()
 
     def on_change_end_at(self, new_index):
@@ -173,20 +182,43 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                 self.unset_source_info()
                 return
             for c_source in current_source_info.values():
-                if c_source.source_name == self.selectedSource.name and c_source.source_type == self.selectedSource.type:
+                if (
+                    c_source.source_name == self.selectedSource.name
+                    and c_source.source_type == self.selectedSource.type
+                ):
                     now = datetime.now(tz=timezone.utc)
-                    self.ui.firstMsgTimeValue.setText(datetime_to_str(c_source.first_timestamp, now))
-                    self.ui.lastMsgKafkaTimeValue.setText(datetime_to_str(c_source.last_message.kafka_timestamp, now))
-                    self.ui.lastMsgReceiveTimeValue.setText(datetime_to_str(c_source.last_message.local_timestamp, now))
-                    self.ui.lastMsgTimeValue.setText(datetime_to_str(c_source.last_message.timestamp, now))
+                    self.ui.firstMsgTimeValue.setText(
+                        datetime_to_str(c_source.first_timestamp, now)
+                    )
+                    self.ui.lastMsgKafkaTimeValue.setText(
+                        datetime_to_str(c_source.last_message.kafka_timestamp, now)
+                    )
+                    self.ui.lastMsgReceiveTimeValue.setText(
+                        datetime_to_str(c_source.last_message.local_timestamp, now)
+                    )
+                    self.ui.lastMsgTimeValue.setText(
+                        datetime_to_str(c_source.last_message.timestamp, now)
+                    )
 
-                    self.ui.consumptionRateValue.setText(f"{c_source.processed_per_second:.2f}/s")
-                    self.ui.currentMsgSizeValue.setText(f"{c_source.last_message.size:.0f} bytes")
-                    self.ui.dataRateValue.setText(f"{c_source.bytes_per_second:.0f} bytes/s")
-                    self.ui.currentOffsetValue.setText(f"{c_source.last_message.offset}")
+                    self.ui.consumptionRateValue.setText(
+                        f"{c_source.processed_per_second:.2f}/s"
+                    )
+                    self.ui.currentMsgSizeValue.setText(
+                        f"{c_source.last_message.size:.0f} bytes"
+                    )
+                    self.ui.dataRateValue.setText(
+                        f"{c_source.bytes_per_second:.0f} bytes/s"
+                    )
+                    self.ui.currentOffsetValue.setText(
+                        f"{c_source.last_message.offset}"
+                    )
                     self.ui.firstOffsetValue.setText(f"{c_source.first_offset}")
-                    self.ui.messageRateValue.setText(f"{c_source.messages_per_second:.2f}/s")
-                    self.ui.receivedMessagesValue.setText(f"{c_source.processed_messages}")
+                    self.ui.messageRateValue.setText(
+                        f"{c_source.messages_per_second:.2f}/s"
+                    )
+                    self.ui.receivedMessagesValue.setText(
+                        f"{c_source.processed_messages}"
+                    )
                     break
         else:
             self.unset_source_info()
@@ -210,7 +242,9 @@ class AdcViewerApp(QtWidgets.QMainWindow):
 
     def onBrokerEditTimer(self):
         self.topicPartitionModel.set_kafka_broker(self.ui.brokerAddressEdit.text())
-        self.topicUpdateFuture = self.thread_pool.submit(get_topic_partitions, self.ui.brokerAddressEdit.text())
+        self.topicUpdateFuture = self.thread_pool.submit(
+            get_topic_partitions, self.ui.brokerAddressEdit.text()
+        )
 
     def onCheckForNewSources(self):
         self.topicPartitionModel.check_for_sources()
@@ -230,19 +264,25 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                 else:
                     self.ui.brokerLed.turn_on()
                     self.updateTopicTree(result)
-                self.topicUpdateFuture = self.thread_pool.submit(get_topic_partitions, self.ui.brokerAddressEdit.text())
+                self.topicUpdateFuture = self.thread_pool.submit(
+                    get_topic_partitions, self.ui.brokerAddressEdit.text()
+                )
             except ValueError:
-                pass  #Ignore
+                pass  # Ignore
 
     def updateTopicTree(self, known_topics):
         enable_new_partitions = True
         if self.ui.enableDefaultComboBox.currentIndex() == 1:
             enable_new_partitions = False
-        self.topicPartitionModel.update_topics(known_topics, self.current_start, self.current_stop, enable_new_partitions)
+        self.topicPartitionModel.update_topics(
+            known_topics, self.current_start, self.current_stop, enable_new_partitions
+        )
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.config.setValue("kafka_address", self.ui.brokerAddressEdit.text())
-        self.config.setValue("enable_default", self.ui.enableDefaultComboBox.currentIndex())
+        self.config.setValue(
+            "enable_default", self.ui.enableDefaultComboBox.currentIndex()
+        )
         event.accept()
 
     def onRestartStartStopTimer(self):

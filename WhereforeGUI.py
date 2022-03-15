@@ -15,16 +15,22 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(858, 597)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.centralwidget.sizePolicy().hasHeightForWidth()
+        )
         self.centralwidget.setSizePolicy(sizePolicy)
         self.centralwidget.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.centralwidget.setObjectName("centralwidget")
@@ -36,10 +42,14 @@ class Ui_MainWindow(object):
         self.brokerAddressLayout = QtWidgets.QHBoxLayout()
         self.brokerAddressLayout.setObjectName("brokerAddressLayout")
         self.brokerAddressLabel = QtWidgets.QLabel(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.brokerAddressLabel.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.brokerAddressLabel.sizePolicy().hasHeightForWidth()
+        )
         self.brokerAddressLabel.setSizePolicy(sizePolicy)
         self.brokerAddressLabel.setObjectName("brokerAddressLabel")
         self.brokerAddressLayout.addWidget(self.brokerAddressLabel)
@@ -123,16 +133,22 @@ class Ui_MainWindow(object):
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.partitionInfoBox)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.partitionInfoLayout = QtWidgets.QHBoxLayout()
-        self.partitionInfoLayout.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
+        self.partitionInfoLayout.setSizeConstraint(
+            QtWidgets.QLayout.SetDefaultConstraint
+        )
         self.partitionInfoLayout.setObjectName("partitionInfoLayout")
         self.lowLayout = QtWidgets.QFormLayout()
         self.lowLayout.setObjectName("lowLayout")
         self.lowOffsetLabel = QtWidgets.QLabel(self.partitionInfoBox)
         self.lowOffsetLabel.setObjectName("lowOffsetLabel")
-        self.lowLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.lowOffsetLabel)
+        self.lowLayout.setWidget(
+            0, QtWidgets.QFormLayout.LabelRole, self.lowOffsetLabel
+        )
         self.lowOffsetValue = QtWidgets.QLabel(self.partitionInfoBox)
         self.lowOffsetValue.setObjectName("lowOffsetValue")
-        self.lowLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.lowOffsetValue)
+        self.lowLayout.setWidget(
+            0, QtWidgets.QFormLayout.FieldRole, self.lowOffsetValue
+        )
         self.partitionInfoLayout.addLayout(self.lowLayout)
         self.line3_1 = QtWidgets.QFrame(self.partitionInfoBox)
         self.line3_1.setFrameShape(QtWidgets.QFrame.VLine)
@@ -143,10 +159,14 @@ class Ui_MainWindow(object):
         self.highLayout.setObjectName("highLayout")
         self.highOffsetLabel = QtWidgets.QLabel(self.partitionInfoBox)
         self.highOffsetLabel.setObjectName("highOffsetLabel")
-        self.highLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.highOffsetLabel)
+        self.highLayout.setWidget(
+            1, QtWidgets.QFormLayout.LabelRole, self.highOffsetLabel
+        )
         self.highOffsetValue = QtWidgets.QLabel(self.partitionInfoBox)
         self.highOffsetValue.setObjectName("highOffsetValue")
-        self.highLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.highOffsetValue)
+        self.highLayout.setWidget(
+            1, QtWidgets.QFormLayout.FieldRole, self.highOffsetValue
+        )
         self.partitionInfoLayout.addLayout(self.highLayout)
         self.line3_2 = QtWidgets.QFrame(self.partitionInfoBox)
         self.line3_2.setFrameShape(QtWidgets.QFrame.VLine)
@@ -165,10 +185,14 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.addLayout(self.partitionInfoLayout)
         self.verticalLayout_4.addWidget(self.partitionInfoBox)
         self.sourceInfoBox = QtWidgets.QGroupBox(self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.sourceInfoBox.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.sourceInfoBox.sizePolicy().hasHeightForWidth()
+        )
         self.sourceInfoBox.setSizePolicy(sizePolicy)
         self.sourceInfoBox.setObjectName("sourceInfoBox")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.sourceInfoBox)
@@ -207,46 +231,74 @@ class Ui_MainWindow(object):
         self.otherLayout.setObjectName("otherLayout")
         self.firstOffsetLabel = QtWidgets.QLabel(self.sourceInfoBox)
         self.firstOffsetLabel.setObjectName("firstOffsetLabel")
-        self.otherLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.firstOffsetLabel)
+        self.otherLayout.setWidget(
+            0, QtWidgets.QFormLayout.LabelRole, self.firstOffsetLabel
+        )
         self.firstOffsetValue = QtWidgets.QLabel(self.sourceInfoBox)
         self.firstOffsetValue.setObjectName("firstOffsetValue")
-        self.otherLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.firstOffsetValue)
+        self.otherLayout.setWidget(
+            0, QtWidgets.QFormLayout.FieldRole, self.firstOffsetValue
+        )
         self.currentOffsetLabel = QtWidgets.QLabel(self.sourceInfoBox)
         self.currentOffsetLabel.setObjectName("currentOffsetLabel")
-        self.otherLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.currentOffsetLabel)
+        self.otherLayout.setWidget(
+            1, QtWidgets.QFormLayout.LabelRole, self.currentOffsetLabel
+        )
         self.currentOffsetValue = QtWidgets.QLabel(self.sourceInfoBox)
         self.currentOffsetValue.setObjectName("currentOffsetValue")
-        self.otherLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.currentOffsetValue)
+        self.otherLayout.setWidget(
+            1, QtWidgets.QFormLayout.FieldRole, self.currentOffsetValue
+        )
         self.receivedMessagesLabel = QtWidgets.QLabel(self.sourceInfoBox)
         self.receivedMessagesLabel.setObjectName("receivedMessagesLabel")
-        self.otherLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.receivedMessagesLabel)
+        self.otherLayout.setWidget(
+            3, QtWidgets.QFormLayout.LabelRole, self.receivedMessagesLabel
+        )
         self.receivedMessagesValue = QtWidgets.QLabel(self.sourceInfoBox)
         self.receivedMessagesValue.setObjectName("receivedMessagesValue")
-        self.otherLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.receivedMessagesValue)
+        self.otherLayout.setWidget(
+            3, QtWidgets.QFormLayout.FieldRole, self.receivedMessagesValue
+        )
         self.consumptionRateValue = QtWidgets.QLabel(self.sourceInfoBox)
         self.consumptionRateValue.setObjectName("consumptionRateValue")
-        self.otherLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.consumptionRateValue)
+        self.otherLayout.setWidget(
+            4, QtWidgets.QFormLayout.FieldRole, self.consumptionRateValue
+        )
         self.consumptionRateLabel = QtWidgets.QLabel(self.sourceInfoBox)
         self.consumptionRateLabel.setObjectName("consumptionRateLabel")
-        self.otherLayout.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.consumptionRateLabel)
+        self.otherLayout.setWidget(
+            4, QtWidgets.QFormLayout.LabelRole, self.consumptionRateLabel
+        )
         self.messageRateLabel = QtWidgets.QLabel(self.sourceInfoBox)
         self.messageRateLabel.setObjectName("messageRateLabel")
-        self.otherLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.messageRateLabel)
+        self.otherLayout.setWidget(
+            5, QtWidgets.QFormLayout.LabelRole, self.messageRateLabel
+        )
         self.messageRateValue = QtWidgets.QLabel(self.sourceInfoBox)
         self.messageRateValue.setObjectName("messageRateValue")
-        self.otherLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.messageRateValue)
+        self.otherLayout.setWidget(
+            5, QtWidgets.QFormLayout.FieldRole, self.messageRateValue
+        )
         self.dataRateLabel = QtWidgets.QLabel(self.sourceInfoBox)
         self.dataRateLabel.setObjectName("dataRateLabel")
-        self.otherLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.dataRateLabel)
+        self.otherLayout.setWidget(
+            6, QtWidgets.QFormLayout.LabelRole, self.dataRateLabel
+        )
         self.dataRateValue = QtWidgets.QLabel(self.sourceInfoBox)
         self.dataRateValue.setObjectName("dataRateValue")
-        self.otherLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.dataRateValue)
+        self.otherLayout.setWidget(
+            6, QtWidgets.QFormLayout.FieldRole, self.dataRateValue
+        )
         self.currentMsgSizeLabel = QtWidgets.QLabel(self.sourceInfoBox)
         self.currentMsgSizeLabel.setObjectName("currentMsgSizeLabel")
-        self.otherLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.currentMsgSizeLabel)
+        self.otherLayout.setWidget(
+            2, QtWidgets.QFormLayout.LabelRole, self.currentMsgSizeLabel
+        )
         self.currentMsgSizeValue = QtWidgets.QLabel(self.sourceInfoBox)
         self.currentMsgSizeValue.setObjectName("currentMsgSizeValue")
-        self.otherLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.currentMsgSizeValue)
+        self.otherLayout.setWidget(
+            2, QtWidgets.QFormLayout.FieldRole, self.currentMsgSizeValue
+        )
         self.verticalLayout_6.addLayout(self.otherLayout)
         self.timestampsBox = QtWidgets.QGroupBox(self.sourceInfoBox)
         self.timestampsBox.setObjectName("timestampsBox")
@@ -254,30 +306,48 @@ class Ui_MainWindow(object):
         self.formLayout_2.setObjectName("formLayout_2")
         self.firstMsgTimLabel = QtWidgets.QLabel(self.timestampsBox)
         self.firstMsgTimLabel.setObjectName("firstMsgTimLabel")
-        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.firstMsgTimLabel)
+        self.formLayout_2.setWidget(
+            0, QtWidgets.QFormLayout.LabelRole, self.firstMsgTimLabel
+        )
         self.firstMsgTimeValue = QtWidgets.QLabel(self.timestampsBox)
         self.firstMsgTimeValue.setObjectName("firstMsgTimeValue")
-        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.firstMsgTimeValue)
+        self.formLayout_2.setWidget(
+            0, QtWidgets.QFormLayout.FieldRole, self.firstMsgTimeValue
+        )
         self.lastMsgReceiveTimeLabel = QtWidgets.QLabel(self.timestampsBox)
         self.lastMsgReceiveTimeLabel.setObjectName("lastMsgReceiveTimeLabel")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.lastMsgReceiveTimeLabel)
+        self.formLayout_2.setWidget(
+            1, QtWidgets.QFormLayout.LabelRole, self.lastMsgReceiveTimeLabel
+        )
         self.lastMsgReceiveTimeValue = QtWidgets.QLabel(self.timestampsBox)
         self.lastMsgReceiveTimeValue.setObjectName("lastMsgReceiveTimeValue")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.lastMsgReceiveTimeValue)
+        self.formLayout_2.setWidget(
+            1, QtWidgets.QFormLayout.FieldRole, self.lastMsgReceiveTimeValue
+        )
         self.lastMsgTimeLabel = QtWidgets.QLabel(self.timestampsBox)
         self.lastMsgTimeLabel.setObjectName("lastMsgTimeLabel")
-        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.lastMsgTimeLabel)
+        self.formLayout_2.setWidget(
+            2, QtWidgets.QFormLayout.LabelRole, self.lastMsgTimeLabel
+        )
         self.lastMsgTimeValue = QtWidgets.QLabel(self.timestampsBox)
         self.lastMsgTimeValue.setObjectName("lastMsgTimeValue")
-        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.lastMsgTimeValue)
+        self.formLayout_2.setWidget(
+            2, QtWidgets.QFormLayout.FieldRole, self.lastMsgTimeValue
+        )
         self.lastMsgKafkaTimeLabel = QtWidgets.QLabel(self.timestampsBox)
         self.lastMsgKafkaTimeLabel.setObjectName("lastMsgKafkaTimeLabel")
-        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.lastMsgKafkaTimeLabel)
+        self.formLayout_2.setWidget(
+            3, QtWidgets.QFormLayout.LabelRole, self.lastMsgKafkaTimeLabel
+        )
         self.lastMsgKafkaTimeValue = QtWidgets.QLabel(self.timestampsBox)
         self.lastMsgKafkaTimeValue.setObjectName("lastMsgKafkaTimeValue")
-        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.lastMsgKafkaTimeValue)
+        self.formLayout_2.setWidget(
+            3, QtWidgets.QFormLayout.FieldRole, self.lastMsgKafkaTimeValue
+        )
         self.verticalLayout_6.addWidget(self.timestampsBox)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+        )
         self.verticalLayout_6.addItem(spacerItem)
         self.verticalLayout_4.addWidget(self.sourceInfoBox)
         self.horizontalLayout_2.addLayout(self.verticalLayout_4)
@@ -315,7 +385,9 @@ class Ui_MainWindow(object):
         self.firstOffsetValue.setText(_translate("MainWindow", "n/a"))
         self.currentOffsetLabel.setText(_translate("MainWindow", "Current offset"))
         self.currentOffsetValue.setText(_translate("MainWindow", "n/a"))
-        self.receivedMessagesLabel.setText(_translate("MainWindow", "Received messages"))
+        self.receivedMessagesLabel.setText(
+            _translate("MainWindow", "Received messages")
+        )
         self.receivedMessagesValue.setText(_translate("MainWindow", "n/a"))
         self.consumptionRateValue.setText(_translate("MainWindow", "n/a"))
         self.consumptionRateLabel.setText(_translate("MainWindow", "Consumption rate"))
@@ -328,7 +400,9 @@ class Ui_MainWindow(object):
         self.timestampsBox.setTitle(_translate("MainWindow", "Timestamps"))
         self.firstMsgTimLabel.setText(_translate("MainWindow", "First message time"))
         self.firstMsgTimeValue.setText(_translate("MainWindow", "n/a"))
-        self.lastMsgReceiveTimeLabel.setText(_translate("MainWindow", "Last received time"))
+        self.lastMsgReceiveTimeLabel.setText(
+            _translate("MainWindow", "Last received time")
+        )
         self.lastMsgReceiveTimeValue.setText(_translate("MainWindow", "n/a"))
         self.lastMsgTimeLabel.setText(_translate("MainWindow", "Last message time"))
         self.lastMsgTimeValue.setText(_translate("MainWindow", "n/a"))
