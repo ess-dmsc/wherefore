@@ -306,7 +306,9 @@ class SourceItem:
         return self.name == other.name and self.type == other.type
 
     def __lt__(self, other: "SourceItem"):
-        return self.name.lower() < other.name.lower() or self.type < other.type
+        if self.name == other.name:
+            return self.type < other.type
+        return self.name < other.name
 
     @property
     def child_count(self) -> int:
