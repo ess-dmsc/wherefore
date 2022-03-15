@@ -1,8 +1,12 @@
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant
+from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant, QMimeData
+import PyQt5.QtWidgets as QtWidgets
 import typing
 from wherefore.TreeItems import RootItem, PartitionItem
 from datetime import datetime
 from wherefore.KafkaMessageTracker import PartitionOffset
+from wherefore.TreeItems import SourceItem
+from json import dumps
+from wherefore.MessageConfigExtractor import get_extra_config
 
 
 class TopicPartitionSourceTreeModel(QAbstractItemModel):
@@ -25,6 +29,21 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
 
     def disable_all(self):
         self.enable_all(False)
+
+    def mimeTypes(self):
+        return ["text/plain", "application/json"]
+
+    def mimeData(self, indexes):
+        mime_data = QMimeData()
+        source = indexes[0].internalPointer()
+        c_partition = source.parent
+        c_topic = c_partition.parent
+        config = {"topic": c_topic.name, "source": source.name}
+        config = {**config, **get_extra_config(source._reference_msg._value)}
+        data_string = dumps({"module": source.type, "config": config}).encode("utf-8")
+        mime_data.setData('text/plain', data_string)
+        mime_data.setData('application/json', data_string)
+        return mime_data
 
     def update_topics(
         self,
@@ -80,7 +99,7 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
                         self.beginInsertRows(
                             partition_index, source_location, source_location
                         )
-                        c_partition.add_source(source.source_name, source.source_type)
+                        c_partition.add_source(source.source_name, source.source_type, source.last_message)
                         self.endInsertRows()
 
     def columnCount(self, parent: QModelIndex = ...) -> int:
@@ -126,6 +145,9 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
 
         if index.column() == 1 and isinstance(index.internalPointer(), PartitionItem):
             flags |= Qt.ItemIsUserCheckable
+
+        if isinstance(index.internalPointer(), SourceItem):
+            flags |= Qt.ItemIsDragEnabled
 
         return flags
 

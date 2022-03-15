@@ -33,13 +33,13 @@ def datetime_to_str(timestamp: Optional[datetime], now: datetime):
     return f"{time_str}, age: {use_diff:.2f} {diff_unit}"
 
 
-class AdcViewerApp(QtWidgets.QMainWindow):
+class SourceViewerApp(QtWidgets.QMainWindow):
     UpdateRates = [10, 20, 50]
     SingleShot = False
 
     def __init__(self):
         # Parent constructor
-        super(AdcViewerApp, self).__init__()
+        super(SourceViewerApp, self).__init__()
         self.ui = None
         self.brokerEditTimer = QTimer()
         self.brokerEditTimer.timeout.connect(self.onBrokerEditTimer)
@@ -97,6 +97,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.ui.enableAllButton.clicked.connect(self.onEnableAllPartitions)
         self.ui.disableAllButton.clicked.connect(self.onDisableAllPartitions)
         self.ui.topicPartitionSourceTree.setModel(self.topicPartitionModel)
+        self.ui.topicPartitionSourceTree.setDragEnabled(True)
         self.ui.startOffsetEdit.textEdited.connect(self.onRestartStartStopTimer)
         self.ui.endOffsetEdit.textEdited.connect(self.onRestartStartStopTimer)
         self.ui.startTimeEdit.editingFinished.connect(self.onRestartStartStopTimer)
@@ -341,6 +342,6 @@ if __name__ == "__main__":
                 PyQt5.uic.compileUi(ui_file, py_ui_file)
 
     app = QtWidgets.QApplication([])
-    main_window = AdcViewerApp()
+    main_window = SourceViewerApp()
     main_window.setup()
     app.exec_()

@@ -235,10 +235,10 @@ class PartitionItem:
                 return i
         return len(self._sources)
 
-    def add_source(self, source_name: str, source_type: str):
+    def add_source(self, source_name: str, source_type: str, reference_msg: bytes):
         self._sources.insert(
             self.get_source_insert_location(source_name, source_type),
-            SourceItem(source_name, source_type, self),
+            SourceItem(source_name, source_type, self, reference_msg),
         )
 
     def child(self, row: int) -> "SourceItem":
@@ -296,11 +296,12 @@ class PartitionItem:
 
 
 class SourceItem:
-    def __init__(self, source_name: str, source_type: str, parent: PartitionItem):
+    def __init__(self, source_name: str, source_type: str, parent: PartitionItem, reference_msg: Optional[bytes] = None):
         super().__init__()
         self._source_name = source_name
         self._source_type = source_type
         self._parent = parent
+        self._reference_msg = reference_msg
 
     def __eq__(self, other: "SourceItem"):
         return self.name == other.name and self.type == other.type

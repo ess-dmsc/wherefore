@@ -13,6 +13,7 @@ from streaming_data_types import (
     serialise_wrdn,
     serialise_ndar,
     serialise_ADAr,
+    serialise_senv
 )
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType,
@@ -88,10 +89,11 @@ list_of_serialisers = [
     ),
     lambda name, time: serialise_wrdn(name, "some_job_id", False, "some_file_name.hdf"),
     lambda name, time: serialise_ADAr(
-        name, 1234, datetime.fromtimestamp(time / 1e9), np.linspace(0, 100)
+        name, 1234, datetime.fromtimestamp(time / 1e9), np.random.randint(0, 20, [5,10,15])
     ),
     # lambda name, time: serialise_ndar(id=name, dims=[2,2], data_type=3, data=[1,2,3,4]),
     lambda name, time: dumps({"name": name, "time": time}).encode("utf-8"),
+    lambda name, time: serialise_senv(name, 3, datetime.fromtimestamp(time/1e9), 10, 111, np.arange(50)),
 ]
 
 
