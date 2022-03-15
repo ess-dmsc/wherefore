@@ -209,6 +209,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
                     self.ui.dataRateValue.setText(
                         f"{c_source.bytes_per_second:.0f} bytes/s"
                     )
+                    self.ui.dataValue.setText(c_source.last_message.data)
                     self.ui.currentOffsetValue.setText(
                         f"{c_source.last_message.offset}"
                     )
@@ -230,6 +231,7 @@ class AdcViewerApp(QtWidgets.QMainWindow):
         self.ui.lastMsgTimeValue.setText("n/a")
         self.ui.currentMsgSizeValue.setText("n/a")
         self.ui.dataRateValue.setText("n/a")
+        self.ui.dataValue.setText("n/a")
 
         self.ui.consumptionRateValue.setText("n/a")
         self.ui.currentOffsetValue.setText("n/a")
