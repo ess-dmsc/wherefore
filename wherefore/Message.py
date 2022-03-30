@@ -226,7 +226,7 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
         "ADAr": adar_extractor,
         "json": json_extractor,
         "mo01": mo01_extractor,
-        "senv":senv_extractor,
+        "senv": senv_extractor,
     }
     try:
         extractor = type_extractor_map[message_type]
