@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant, QMimeData
+from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant, QMimeData, QByteArray
 import PyQt5.QtWidgets as QtWidgets
 import typing
 from wherefore.TreeItems import RootItem, PartitionItem
@@ -31,7 +31,7 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
         self.enable_all(False)
 
     def mimeTypes(self):
-        return ["text/plain", "application/json"]
+        return ["text/plain", "application/json", 'streaming/writer_module']
 
     def mimeData(self, indexes):
         mime_data = QMimeData()
@@ -40,9 +40,10 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
         c_topic = c_partition.parent
         config = {"topic": c_topic.name, "source": source.name}
         config = {**config, **get_extra_config(source._reference_msg._value)}
-        data_string = dumps({"module": source.type, "config": config}).encode("utf-8")
-        mime_data.setData('text/plain', data_string)
-        mime_data.setData('application/json', data_string)
+        data_string = dumps({"module": source.type, "config": config})
+        mime_data.setText(data_string)
+        mime_data.setData('application/json', data_string.encode("utf-8"))
+        mime_data.setData('streaming/writer_module', data_string.encode("utf-8"))
         return mime_data
 
     def update_topics(
