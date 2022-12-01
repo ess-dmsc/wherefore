@@ -124,6 +124,15 @@ def ep00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     )
 
 
+# def ep01_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
+#     extracted = deserialise_ep01(data)
+#     return (
+#         extracted.source_name,
+#         datetime.fromtimestamp(extracted.timestamp / 1e9, tz=timezone.utc),
+#         f"{extracted.source_name} status: {extracted.type.name.capitalize()}",
+#     )
+
+
 def tdct_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_tdct(data)
     return (
