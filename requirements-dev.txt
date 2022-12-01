@@ -1,0 +1,7 @@
+# Development requirements
+
+-r requirements.txt
+pre-commit
+pytest
+pytest-cov
+
