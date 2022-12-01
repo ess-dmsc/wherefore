@@ -5,7 +5,7 @@ import time
 from curses_renderer import CursesRenderer
 import re
 from datetime import datetime, timezone
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, List
 
 
 def extract_point(point: str) -> Tuple[Union[datetime, int, str], Optional[int]]:
@@ -73,7 +73,7 @@ def print_topics(broker: str):
         print(t)
 
 
-def main(broker: str, topic: str, partition: int, start: str, end: str):
+def main(broker: str, topic: str, partition: int, start: str, end: str, schemas: Optional[List[str]]):
     try:
         tracker = KafkaMessageTracker(
             broker,
@@ -81,6 +81,7 @@ def main(broker: str, topic: str, partition: int, start: str, end: str):
             partition=partition,
             start=extract_start(start),
             stop=extract_end(end),
+            schemas=schemas,
         )
     except RuntimeError as e:
         print(f"Unable to enter run loop due to: {e}")
@@ -143,8 +144,18 @@ if __name__ == "__main__":
         default="never",
     )
 
+    parser.add_argument(
+        "-S",
+        "--schemas",
+        type=str,
+        nargs="*",
+        default=None,
+        help='Space-separated list of schemas. Only messages with these schemas will be shown.',
+    )
+
     args = parser.parse_args()
     if args.list:
         print_topics(args.broker)
         exit(0)
-    main(args.broker, args.topic, args.partition, args.start, args.end)
+
+    main(args.broker, args.topic, args.partition, args.start, args.end, args.schemas)

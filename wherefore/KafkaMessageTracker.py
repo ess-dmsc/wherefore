@@ -1,5 +1,5 @@
 from threading import Thread
-from typing import Union, Dict, Optional, Tuple
+from typing import Union, Dict, Optional, Tuple, List
 from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
 from kafka import KafkaConsumer, TopicPartition
@@ -32,6 +32,7 @@ def thread_function(
     in_queue: Queue,
     out_queue: Queue,
     topic_partition,
+    schemas: Optional[List[str]] = None,
 ):
     known_sources: Dict[bytes, DataSource] = {}
     start_time = datetime.now(tz=timezone.utc)
@@ -39,30 +40,32 @@ def thread_function(
     while True:
         messages_ctr = 0
         for kafka_msg in consumer:
+            if messages_ctr == CHECK_FOR_MSG_INTERVAL:
+                break
+            messages_ctr += 1
             new_msg = Message(kafka_msg)
+            if schemas:
+                if new_msg.message_type not in schemas:
+                    continue
             if type(stop) is int and new_msg.offset > stop:
-                pass
-            elif (
+                continue
+            if (
                 type(stop) is datetime
                 and new_msg.timestamp is not None
                 and new_msg.timestamp > stop
             ):
-                pass
-            elif (
+                continue
+            if (
                 type(stop) is datetime
                 and new_msg.timestamp is None
                 and new_msg.kafka_timestamp > stop
             ):
-                pass
-            else:
-                if not new_msg.source_hash in known_sources:
-                    known_sources[new_msg.source_hash] = DataSource(
-                        new_msg.source_name, new_msg.message_type, start_time
-                    )
-                known_sources[new_msg.source_hash].process_message(new_msg)
-            messages_ctr += 1
-            if messages_ctr == CHECK_FOR_MSG_INTERVAL:
-                break
+                continue
+            if not new_msg.source_hash in known_sources:
+                known_sources[new_msg.source_hash] = DataSource(
+                    new_msg.source_name, new_msg.message_type, start_time
+                )
+            known_sources[new_msg.source_hash].process_message(new_msg)
         if not in_queue.empty():
             new_msg = in_queue.get()
             if new_msg == "exit":
@@ -98,6 +101,7 @@ class KafkaMessageTracker:
             Union[int, datetime, PartitionOffset], Optional[int]
         ] = PartitionOffset.END,
         stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER,
+        schemas: Optional[List[str]] = None,
     ):
         self.to_thread = Queue()
         self.from_thread = Queue(maxsize=100)
@@ -182,6 +186,7 @@ class KafkaMessageTracker:
                 "out_queue": self.from_thread,
                 "stop": stop,
                 "topic_partition": topic_partition,
+                "schemas": schemas,
             },
         )
         self.thread.start()
