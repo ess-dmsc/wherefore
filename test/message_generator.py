@@ -7,6 +7,7 @@ from streaming_data_types import (
     serialise_6s4t,
     serialise_x5f2,
     serialise_ep00,
+    serialise_ep01,
     serialise_tdct,
     serialise_rf5k,
     serialise_answ,
@@ -18,6 +19,7 @@ from streaming_data_types import (
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType,
 )
+from streaming_data_types.epics_connection_ep01 import ConnectionInfo
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
@@ -75,6 +77,7 @@ list_of_serialisers = [
         "some_app_name", "v1.2.3", name, "some_host_name", 123456, 65431, "{}"
     ),
     lambda name, time: serialise_ep00(time, EventType.CONNECTED, name),
+    lambda name, time: serialise_ep01(time, ConnectionInfo.CONNECTED, name),
     lambda name, time: serialise_tdct(name, time + np.arange(10)),
     lambda name, time: serialise_rf5k(UpdateType.REMOVE, []),
     lambda name, time: serialise_answ(

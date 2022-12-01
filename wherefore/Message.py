@@ -9,6 +9,7 @@ from streaming_data_types import (
     deserialise_6s4t,
     deserialise_x5f2,
     deserialise_ep00,
+    deserialise_ep01,
     deserialise_tdct,
     deserialise_rf5k,
     deserialise_answ,
@@ -27,6 +28,7 @@ import numpy as np
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType,
 )
+# from streaming_data_types.epics_connection_ep01 import ConnectionInfo
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
@@ -124,13 +126,13 @@ def ep00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     )
 
 
-# def ep01_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
-#     extracted = deserialise_ep01(data)
-#     return (
-#         extracted.source_name,
-#         datetime.fromtimestamp(extracted.timestamp / 1e9, tz=timezone.utc),
-#         f"{extracted.source_name} status: {extracted.type.name.capitalize()}",
-#     )
+def ep01_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
+    extracted = deserialise_ep01(data)
+    return (
+        extracted.source_name,
+        datetime.fromtimestamp(extracted.timestamp / 1e9, tz=timezone.utc),
+        f"{extracted.source_name} status: {extracted.type.name.capitalize()}",
+    )
 
 
 def tdct_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
@@ -247,6 +249,7 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
         "6s4t": s_6s4t_extractor,
         "x5f2": x5f2_extractor,
         "ep00": ep00_extractor,
+        "ep01": ep01_extractor,
         "tdct": tdct_extractor,
         "rf5k": rf5k_extractor,
         "answ": answ_extractor,

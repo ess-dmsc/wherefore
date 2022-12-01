@@ -51,6 +51,7 @@ As of this commit, *wherefore* is aware of the following flatbuffer schemas (fro
 * 624t
 * x5f2
 * ep00
+* ep01
 * tdct
 * rf5k
 * answ
