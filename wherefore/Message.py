@@ -128,7 +128,7 @@ def ep01_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     return (
         extracted.source_name,
         datetime.fromtimestamp(extracted.timestamp / 1e9, tz=timezone.utc),
-        f"{extracted.source_name} status: {extracted.type.name.capitalize()}",
+        f"{extracted.source_name} status: {extracted.status.name.capitalize()}",
     )
 
 
