@@ -16,8 +16,6 @@ from streaming_data_types import (
     deserialise_ndar,
     deserialise_ADAr,
     deserialise_senv,
-    deserialise_scal,
-    deserialise_pvCn,
     deserialise_pvAl,
 )
 from wherefore.MonitorMessage import MonitorMessage
@@ -221,18 +219,6 @@ def senv_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     return message.name, message.timestamp, f"Nr of elements: {len(message.values)}"
 
 
-def scal_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
-    message = deserialise_scal(data)
-    if isinstance(message.value, (int, float)):
-        return message.source_name, message.timestamp, f"Value: {message.value}"
-    return message.source_name, message.timestamp, f"Nr of elements: {len(message.value)}"
-
-
-def pvCn_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
-    message = deserialise_pvCn(data)
-    return message.source_name, message.timestamp, f"Status: {str(message.status)}"
-
-
 def pvAl_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     message = deserialise_pvAl(data)
     return message.source_name, message.timestamp, f"Alarm: {str(message.state)}/{str(message.severity)}"
@@ -259,8 +245,6 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
         "json": json_extractor,
         "mo01": mo01_extractor,
         "senv": senv_extractor,
-        "scal": scal_extractor,
-        "pvCn": pvCn_extractor,
         "pvAl": pvAl_extractor,
     }
     try:
