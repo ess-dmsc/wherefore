@@ -1,6 +1,7 @@
 import argparse
 from wherefore.KafkaMessageTracker import KafkaMessageTracker, PartitionOffset
 from wherefore.KafkaTopicPartitions import get_topic_partitions
+from wherefore.Message import TYPE_EXTRACTOR_MAP
 import time
 from curses_renderer import CursesRenderer
 import re
@@ -149,6 +150,7 @@ if __name__ == "__main__":
         "--schemas",
         type=str,
         nargs="*",
+        choices=TYPE_EXTRACTOR_MAP.keys(),
         default=None,
         help='Space-separated list of schemas. Only messages with these schemas will be shown.',
     )
@@ -157,5 +159,4 @@ if __name__ == "__main__":
     if args.list:
         print_topics(args.broker)
         exit(0)
-
     main(args.broker, args.topic, args.partition, args.start, args.end, args.schemas)
