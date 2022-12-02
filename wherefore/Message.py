@@ -227,6 +227,7 @@ TYPE_EXTRACTOR_MAP = {
     "6s4t": s_6s4t_extractor,
     "x5f2": x5f2_extractor,
     "ep00": ep00_extractor,
+    "ep01": ep01_extractor,
     "tdct": tdct_extractor,
     "rf5k": rf5k_extractor,
     "answ": answ_extractor,
@@ -236,9 +237,6 @@ TYPE_EXTRACTOR_MAP = {
     "json": json_extractor,
     "mo01": mo01_extractor,
     "senv": senv_extractor,
-    "scal": scal_extractor,
-    "pvCn": pvCn_extractor,
-    "pvAl": pvAl_extractor,
 }
 
 
