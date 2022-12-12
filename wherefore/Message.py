@@ -227,32 +227,34 @@ def pvAl_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     return message.source_name, message.timestamp, f"Alarm: {str(message.state)}/{str(message.severity)}"
 
 
+TYPE_EXTRACTOR_MAP = {
+    "ev42": ev42_extractor,
+    "hs00": hs00_extractor,
+    "f142": f142_extractor,
+    "ns10": ns10_extractor,
+    "pl72": pl72_extractor,
+    "6s4t": s_6s4t_extractor,
+    "x5f2": x5f2_extractor,
+    "ep00": ep00_extractor,
+    "tdct": tdct_extractor,
+    "rf5k": rf5k_extractor,
+    "answ": answ_extractor,
+    "wrdn": wrdn_extractor,
+    "NDAr": ndar_extractor,
+    "ADAr": adar_extractor,
+    "json": json_extractor,
+    "mo01": mo01_extractor,
+    "senv": senv_extractor,
+    "scal": scal_extractor,
+    "pvCn": pvCn_extractor,
+    "pvAl": pvAl_extractor,
+}
+
+
 def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
     message_type = get_schema(message_data)
-    type_extractor_map = {
-        "ev42": ev42_extractor,
-        "hs00": hs00_extractor,
-        "f142": f142_extractor,
-        "ns10": ns10_extractor,
-        "pl72": pl72_extractor,
-        "6s4t": s_6s4t_extractor,
-        "x5f2": x5f2_extractor,
-        "ep00": ep00_extractor,
-        "tdct": tdct_extractor,
-        "rf5k": rf5k_extractor,
-        "answ": answ_extractor,
-        "wrdn": wrdn_extractor,
-        "NDAr": ndar_extractor,
-        "ADAr": adar_extractor,
-        "json": json_extractor,
-        "mo01": mo01_extractor,
-        "senv": senv_extractor,
-        "scal": scal_extractor,
-        "pvCn": pvCn_extractor,
-        "pvAl": pvAl_extractor,
-    }
     try:
-        extractor = type_extractor_map[message_type]
+        extractor = TYPE_EXTRACTOR_MAP[message_type]
     except KeyError:
         return "Unknown", "Unknown", None, "No data"
     return message_type, *extractor(message_data)
