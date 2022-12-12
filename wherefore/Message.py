@@ -9,15 +9,13 @@ from streaming_data_types import (
     deserialise_6s4t,
     deserialise_x5f2,
     deserialise_ep00,
+    deserialise_ep01,
     deserialise_tdct,
     deserialise_rf5k,
     deserialise_answ,
     deserialise_ndar,
     deserialise_ADAr,
     deserialise_senv,
-    deserialise_scal,
-    deserialise_pvCn,
-    deserialise_pvAl,
 )
 from wherefore.MonitorMessage import MonitorMessage
 from datetime import datetime, timezone
@@ -27,6 +25,7 @@ import numpy as np
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType,
 )
+# from streaming_data_types.epics_connection_ep01 import ConnectionInfo
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
@@ -124,6 +123,15 @@ def ep00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     )
 
 
+def ep01_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
+    extracted = deserialise_ep01(data)
+    return (
+        extracted.source_name,
+        datetime.fromtimestamp(extracted.timestamp / 1e9, tz=timezone.utc),
+        f"{extracted.source_name} status: {extracted.status.name.capitalize()}",
+    )
+
+
 def tdct_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_tdct(data)
     return (
@@ -210,23 +218,6 @@ def senv_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     return message.name, message.timestamp, f"Nr of elements: {len(message.values)}"
 
 
-def scal_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
-    message = deserialise_scal(data)
-    if isinstance(message.value, (int, float)):
-        return message.source_name, message.timestamp, f"Value: {message.value}"
-    return message.source_name, message.timestamp, f"Nr of elements: {len(message.value)}"
-
-
-def pvCn_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
-    message = deserialise_pvCn(data)
-    return message.source_name, message.timestamp, f"Status: {str(message.status)}"
-
-
-def pvAl_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
-    message = deserialise_pvAl(data)
-    return message.source_name, message.timestamp, f"Alarm: {str(message.state)}/{str(message.severity)}"
-
-
 TYPE_EXTRACTOR_MAP = {
     "ev42": ev42_extractor,
     "hs00": hs00_extractor,
@@ -236,6 +227,7 @@ TYPE_EXTRACTOR_MAP = {
     "6s4t": s_6s4t_extractor,
     "x5f2": x5f2_extractor,
     "ep00": ep00_extractor,
+    "ep01": ep01_extractor,
     "tdct": tdct_extractor,
     "rf5k": rf5k_extractor,
     "answ": answ_extractor,
@@ -245,9 +237,6 @@ TYPE_EXTRACTOR_MAP = {
     "json": json_extractor,
     "mo01": mo01_extractor,
     "senv": senv_extractor,
-    "scal": scal_extractor,
-    "pvCn": pvCn_extractor,
-    "pvAl": pvAl_extractor,
 }
 
 
