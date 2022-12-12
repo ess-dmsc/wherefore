@@ -1,21 +1,26 @@
 from streaming_data_types.utils import get_schema as get_schema
 from streaming_data_types import (
-    deserialise_ev42,
-    deserialise_hs00,
-    deserialise_wrdn,
-    deserialise_f142,
-    deserialise_ns10,
-    deserialise_pl72,
     deserialise_6s4t,
-    deserialise_x5f2,
+    deserialise_ADAr,
+    deserialise_al00,
+    deserialise_answ,
     deserialise_ep00,
     deserialise_ep01,
-    deserialise_tdct,
-    deserialise_rf5k,
-    deserialise_answ,
+    deserialise_ev42,
+    deserialise_ev44,
+    deserialise_f142,
+    deserialise_f144,
+    deserialise_hs00,
+    deserialise_hs01,
     deserialise_ndar,
-    deserialise_ADAr,
+    deserialise_ns10,
+    deserialise_pl72,
+    deserialise_rf5k,
+    deserialise_se00,
     deserialise_senv,
+    deserialise_tdct,
+    deserialise_wrdn,
+    deserialise_x5f2,
 )
 from wherefore.MonitorMessage import MonitorMessage
 from datetime import datetime, timezone
@@ -44,8 +49,29 @@ def ev42_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     )
 
 
+def ev44_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
+    extracted = deserialise_ev44(data)
+    return (
+        extracted.source_name,
+        datetime.fromtimestamp(extracted.reference_time / 1e9, tz=timezone.utc),
+        f"Nr of events: {len(extracted.time_of_flight)}",
+    )
+
+
 def hs00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_hs00(data)
+    dims_string = extracted["dim_metadata"][0]["length"]
+    for i in range(1, len(extracted["dim_metadata"])):
+        dims_string += "x" + str(extracted["dim_metadata"][i]["length"])
+    return (
+        extracted["source"],
+        datetime.fromtimestamp(extracted["timestamp"] / 1e9, tz=timezone.utc),
+        f"Histogram dimensions: {dims_string}",
+    )
+
+
+def hs01_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
+    extracted = deserialise_hs01(data)
     dims_string = extracted["dim_metadata"][0]["length"]
     for i in range(1, len(extracted["dim_metadata"])):
         dims_string += "x" + str(extracted["dim_metadata"][i]["length"])
@@ -65,6 +91,29 @@ def f142_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     return (
         extracted.source_name,
         datetime.fromtimestamp(extracted.timestamp_unix_ns / 1e9, tz=timezone.utc),
+        value_string,
+    )
+
+
+def f144_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
+    extracted = deserialise_f144(data)
+    if len(extracted.value.shape) == 0:
+        value_string = f"Value: {extracted.value}"
+    else:
+        value_string = f"Nr of elements: {len(extracted.value)}"
+    return (
+        extracted.source_name,
+        datetime.fromtimestamp(extracted.timestamp_unix_ns / 1e9, tz=timezone.utc),
+        value_string,
+    )
+
+
+def al00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
+    extracted = deserialise_al00(data)
+    value_string = f"Sev: {extracted.severity.name}, Msg: {extracted.message}"
+    return (
+        extracted.source,
+        datetime.fromtimestamp(extracted.timestamp_ns / 1e9, tz=timezone.utc),
         value_string,
     )
 
@@ -218,25 +267,35 @@ def senv_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     return message.name, message.timestamp, f"Nr of elements: {len(message.values)}"
 
 
+def se00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
+    message = deserialise_se00(data)
+    return message.name, message.timestamp_unix_ns, f"Nr of elements: {len(message.values)}"
+
+
 TYPE_EXTRACTOR_MAP = {
-    "ev42": ev42_extractor,
-    "hs00": hs00_extractor,
-    "f142": f142_extractor,
-    "ns10": ns10_extractor,
-    "pl72": pl72_extractor,
     "6s4t": s_6s4t_extractor,
-    "x5f2": x5f2_extractor,
+    "ADAr": adar_extractor,
+    "answ": answ_extractor,
     "ep00": ep00_extractor,
     "ep01": ep01_extractor,
-    "tdct": tdct_extractor,
-    "rf5k": rf5k_extractor,
-    "answ": answ_extractor,
-    "wrdn": wrdn_extractor,
-    "NDAr": ndar_extractor,
-    "ADAr": adar_extractor,
+    "ev42": ev42_extractor,
+    "f142": f142_extractor,
+    "hs00": hs00_extractor,
     "json": json_extractor,
     "mo01": mo01_extractor,
+    "NDAr": ndar_extractor,
+    "ns10": ns10_extractor,
+    "pl72": pl72_extractor,
+    "rf5k": rf5k_extractor,
     "senv": senv_extractor,
+    "tdct": tdct_extractor,
+    "wrdn": wrdn_extractor,
+    "x5f2": x5f2_extractor,
+    "ev44": ev44_extractor,
+    "hs01": hs01_extractor,
+    "f144": f144_extractor,
+    "se00": se00_extractor,
+    "al00": al00_extractor,
 }
 
 

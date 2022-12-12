@@ -150,7 +150,7 @@ if __name__ == "__main__":
         "--schemas",
         type=str,
         nargs="*",
-        choices=TYPE_EXTRACTOR_MAP.keys(),
+        choices=sorted(TYPE_EXTRACTOR_MAP.keys()),
         default=None,
         help='Space-separated list of schemas. Only messages with these schemas will be shown.',
     )

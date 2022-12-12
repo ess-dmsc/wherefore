@@ -43,23 +43,29 @@ python wherefore.py -b some_broker -t some_topic --start 1234 --end 1611167278s
 
 As of this commit, *wherefore* is aware of the following flatbuffer schemas (from [streaming-data-types](https://github.com/ess-dmsc/streaming-data-types)):
 
-* ev42
-* hs00
-* f142
-* ns10
-* pl72
 * 624t
-* x5f2
+* al00
+* answ
 * ep00
 * ep01
-* tdct
-* rf5k
-* answ
-* wrdn
-* ndar
-* rf5k
+* ev42
+* ev44
+* f142
+* f144
+* hs00
+* hs01
 * json
 * mo01
+* ndar
+* ns10
+* pl72
+* rf5k
+* rf5k
+* se00
+* tdct
+* wrdn
+* x5f2
+
  
  Any other schema or non-flatbuffer message will be listed as "Unknown".
  
