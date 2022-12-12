@@ -1,21 +1,27 @@
 from streaming_data_types import (
-    serialise_f142,
-    serialise_ev42,
-    serialise_hs00,
-    serialise_ns10,
-    serialise_pl72,
     serialise_6s4t,
-    serialise_x5f2,
+    serialise_ADAr,
+    serialise_al00,
+    serialise_answ,
     serialise_ep00,
     serialise_ep01,
-    serialise_tdct,
-    serialise_rf5k,
-    serialise_answ,
-    serialise_wrdn,
+    serialise_ev42,
+    serialise_ev44,
+    serialise_f142,
+    serialise_f144,
+    serialise_hs00,
+    serialise_hs01,
     serialise_ndar,
-    serialise_ADAr,
-    serialise_senv
+    serialise_ns10,
+    serialise_pl72,
+    serialise_rf5k,
+    serialise_se00,
+    serialise_senv,
+    serialise_tdct,
+    serialise_wrdn,
+    serialise_x5f2,
 )
+from streaming_data_types.alarm_al00 import Severity as al00_Severity
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType,
 )
@@ -30,7 +36,8 @@ from streaming_data_types.fbschemas.action_response_answ.ActionOutcome import (
 from kafka import KafkaProducer
 import argparse
 import time
-import randomname
+import random
+import string
 import numpy as np
 from datetime import datetime
 from json import dumps
@@ -59,8 +66,13 @@ def create_hs00_test_data(name, time):
 list_of_serialisers = [
     lambda name, time: serialise_f142(42, name, time),
     lambda name, time: serialise_f142(np.random.rand(4), name, time),
+    lambda name, time: serialise_f144(name, 42, time),
+    lambda name, time: serialise_f144(name, np.random.rand(4), time),
+    lambda name, time: serialise_al00(name, time, al00_Severity.MAJOR, "major error"),
     lambda name, time: serialise_ev42(name, 1234, time, np.arange(10), np.arange(10)),
+    lambda name, time: serialise_ev44(name, 1234, time, np.arange(10), np.arange(10)),
     lambda name, time: serialise_hs00(create_hs00_test_data(name, time)),
+    lambda name, time: serialise_hs01(create_hs00_test_data(name, time)),
     lambda name, time: serialise_ns10(
         key=name, value="42", time_stamp=time / 1e9, ttl=111
     ),
@@ -97,6 +109,7 @@ list_of_serialisers = [
     # lambda name, time: serialise_ndar(id=name, dims=[2,2], data_type=3, data=[1,2,3,4]),
     lambda name, time: dumps({"name": name, "time": time}).encode("utf-8"),
     lambda name, time: serialise_senv(name, 3, datetime.fromtimestamp(time/1e9), 10, 111, np.arange(50)),
+    lambda name, time: serialise_se00(name, 3, datetime.fromtimestamp(time/1e9), 10, 111, np.arange(50)),
 ]
 
 
@@ -115,7 +128,7 @@ def main():
         "-n", type=int, help="Number of sources to produce messages for.", default=1
     )
     args = parser.parse_args()
-    used_names = [randomname.get_name() for i in range(args.n)]
+    used_names = ["".join(random.choices(string.ascii_lowercase, k=9)) for i in range(args.n)]
     producer = KafkaProducer(bootstrap_servers=args.broker)
 
     while True:
