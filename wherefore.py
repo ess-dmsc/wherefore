@@ -1,3 +1,4 @@
+import logging
 import argparse
 from wherefore.KafkaMessageTracker import KafkaMessageTracker, PartitionOffset
 from wherefore.KafkaTopicPartitions import get_topic_partitions
@@ -7,6 +8,9 @@ from curses_renderer import CursesRenderer
 import re
 from datetime import datetime, timezone
 from typing import Tuple, Optional, Union, List
+
+
+logging.basicConfig(filename="wherefore.log", level=logging.ERROR)
 
 
 def extract_point(point: str) -> Tuple[Union[datetime, int, str], Optional[int]]:
@@ -86,23 +90,27 @@ def main(broker: str, topic: str, partition: int, start: str, end: str, schemas:
         )
     except RuntimeError as e:
         print(f"Unable to enter run loop due to: {e}")
+        logging.exception(f"Unable to enter run loop due to: {e}")
     renderer = CursesRenderer(topic, partition)
     try:
         while True:
-            latest_update = tracker.get_latest_values()
-            if latest_update is not None and len(latest_update) > 0:
-                current_offsets = tracker.get_current_edge_offsets()
-                max_current_offset = 0
-                for source in latest_update.values():
-                    msg_offset = source.last_message.offset
-                    if msg_offset > max_current_offset:
-                        max_current_offset = msg_offset
-                current_offsets.lag = current_offsets.high - max_current_offset - 1
-                if latest_update is not None:
-                    renderer.set_data(latest_update)
-                    renderer.set_partition_offsets(current_offsets)
-            renderer.draw()
-            time.sleep(0.01)
+            try:
+                latest_update = tracker.get_latest_values()
+                if latest_update is not None and len(latest_update) > 0:
+                    current_offsets = tracker.get_current_edge_offsets()
+                    max_current_offset = 0
+                    for source in latest_update.values():
+                        msg_offset = source.last_message.offset
+                        if msg_offset > max_current_offset:
+                            max_current_offset = msg_offset
+                    current_offsets.lag = current_offsets.high - max_current_offset - 1
+                    if latest_update is not None:
+                        renderer.set_data(latest_update)
+                        renderer.set_partition_offsets(current_offsets)
+                renderer.draw()
+                time.sleep(0.01)
+            except Exception as e:
+                logging.exception(f"Error in processing loop: {e}")
     except KeyboardInterrupt:
         pass
 
