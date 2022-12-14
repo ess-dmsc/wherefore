@@ -4,7 +4,9 @@ import numpy as np
 from streaming_data_types import (
     deserialise_ADAr,
     deserialise_f142,
+    deserialise_f144,
     deserialise_senv,
+    deserialise_se00,
 )
 
 
@@ -28,6 +30,47 @@ def get_f142_config(msg: bytes) -> Dict[str, Any]:
     if len(result.value.shape) == 1:
         return_dict["array_size"] = result.value.shape[0]
     return return_dict
+
+
+def get_f144_config(msg: bytes) -> Dict[str, Any]:
+    numpy_type_to_string = {
+        np.dtype("byte"): "int8",
+        np.dtype("ubyte"): "uint8",
+        np.dtype("int8"): "int8",
+        np.dtype("int16"): "int16",
+        np.dtype("int32"): "int32",
+        np.dtype("int64"): "int64",
+        np.dtype("uint8"): "uint8",
+        np.dtype("uint16"): "uint16",
+        np.dtype("uint32"): "uint32",
+        np.dtype("uint64"): "uint64",
+        np.dtype("float32"): "float32",
+        np.dtype("float64"): "float64",
+    }
+    result = deserialise_f144(msg)
+    return_dict = {"type": numpy_type_to_string[result.value.dtype], }
+    if len(result.value.shape) == 1:
+        return_dict["array_size"] = result.value.shape[0]
+    return return_dict
+
+
+def get_se00_config(msg: bytes) -> Dict[str, Any]:
+    numpy_type_to_string = {
+        np.dtype("byte"): "int8",
+        np.dtype("ubyte"): "uint8",
+        np.dtype("int8"): "int8",
+        np.dtype("int16"): "int16",
+        np.dtype("int32"): "int32",
+        np.dtype("int64"): "int64",
+        np.dtype("uint8"): "uint8",
+        np.dtype("uint16"): "uint16",
+        np.dtype("uint32"): "uint32",
+        np.dtype("uint64"): "uint64",
+        np.dtype("float32"): "float32",
+        np.dtype("float64"): "float64",
+    }
+    result = deserialise_se00(msg)
+    return {"type": numpy_type_to_string[result.values.dtype], }
 
 
 def get_senv_config(msg: bytes) -> Dict[str, Any]:
@@ -69,6 +112,8 @@ def get_ADAr_config(msg: bytes) -> Dict[str, Any]:
 def get_extra_config(msg: bytes) -> Dict:
     config_extractor_map: Dict[str, Callable[[bytes], Dict[str, str]]] = {
         "f142": get_f142_config,
+        "f144": get_f144_config,
+        "se00": get_se00_config,
         "senv": get_senv_config,
         "ADAr": get_ADAr_config,
     }

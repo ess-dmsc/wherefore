@@ -1,3 +1,5 @@
+import logging
+
 from streaming_data_types.utils import get_schema as get_schema
 from streaming_data_types import (
     deserialise_6s4t,
@@ -84,10 +86,10 @@ def hs01_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
 
 def f142_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_f142(data)
-    if len(extracted.value.shape) == 0:
-        value_string = f"Value: {extracted.value}"
-    else:
+    if isinstance(extracted.value, np.ndarray) and len(extracted.value.shape) > 0:
         value_string = f"Nr of elements: {len(extracted.value)}"
+    else:
+        value_string = f"Value: {extracted.value}"
     return (
         extracted.source_name,
         datetime.fromtimestamp(extracted.timestamp_unix_ns / 1e9, tz=timezone.utc),
@@ -97,10 +99,10 @@ def f142_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
 
 def f144_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_f144(data)
-    if len(extracted.value.shape) == 0:
-        value_string = f"Value: {extracted.value}"
-    else:
+    if isinstance(extracted.value, np.ndarray) and len(extracted.value.shape) > 0:
         value_string = f"Nr of elements: {len(extracted.value)}"
+    else:
+        value_string = f"Value: {extracted.value}"
     return (
         extracted.source_name,
         datetime.fromtimestamp(extracted.timestamp_unix_ns / 1e9, tz=timezone.utc),
@@ -269,7 +271,11 @@ def senv_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
 
 def se00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     message = deserialise_se00(data)
-    return message.name, message.timestamp_unix_ns, f"Nr of elements: {len(message.values)}"
+    return (
+        message.name,
+        datetime.fromtimestamp(message.timestamp_unix_ns / 1e9, tz=timezone.utc),
+        f"Nr of elements: {len(message.values)}"
+    )
 
 
 TYPE_EXTRACTOR_MAP = {
@@ -305,7 +311,12 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
         extractor = TYPE_EXTRACTOR_MAP[message_type]
     except KeyError:
         return "Unknown", "Unknown", None, "No data"
-    return message_type, *extractor(message_data)
+    try:
+        source, timestamp, display_message = extractor(message_data)
+    except Exception as exc:
+        logging.exception(f"Error decoding schema {message_type}: {exc}")
+        return message_type, "Unknown", None, exc
+    return message_type, source, timestamp, display_message
 
 
 class Message:

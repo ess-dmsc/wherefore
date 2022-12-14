@@ -1,4 +1,6 @@
 import argparse
+import logging
+import sys
 from wherefore.KafkaMessageTracker import KafkaMessageTracker, PartitionOffset
 from wherefore.KafkaTopicPartitions import get_topic_partitions
 from wherefore.Message import TYPE_EXTRACTOR_MAP
@@ -86,9 +88,10 @@ def main(broker: str, topic: str, partition: int, start: str, end: str, schemas:
         )
     except RuntimeError as e:
         print(f"Unable to enter run loop due to: {e}")
+        sys.exit(1)
     renderer = CursesRenderer(topic, partition)
-    try:
-        while True:
+    while True:
+        try:
             latest_update = tracker.get_latest_values()
             if latest_update is not None and len(latest_update) > 0:
                 current_offsets = tracker.get_current_edge_offsets()
@@ -103,8 +106,10 @@ def main(broker: str, topic: str, partition: int, start: str, end: str, schemas:
                     renderer.set_partition_offsets(current_offsets)
             renderer.draw()
             time.sleep(0.01)
-    except KeyboardInterrupt:
-        pass
+        except Exception as e:
+            logging.exception(f"Error in processing loop: {e}")
+        except KeyboardInterrupt:
+            sys.exit(0)
 
 
 if __name__ == "__main__":
@@ -126,6 +131,20 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-e",
+        "--end",
+        type=str,
+        help='Where should consumption stop/end? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.',
+        default="never",
+    )
+
+    parser.add_argument(
+        "--log",
+        type=str,
+        help="File name to write log messages to. Logging is disabled by default."
+    )
+
+    parser.add_argument(
         "-p", "--partition", type=int, help="Partition to connect to.", default=0
     )
 
@@ -135,14 +154,6 @@ if __name__ == "__main__":
         type=str,
         help='Where should consumption start? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `beginning`, `end`. Each one of these can have an integer modifier at the end which offsets the start location. E.g. `-s end-10` or `-s "2012-01-01 12:30:12+500"`',
         default="end",
-    )
-
-    parser.add_argument(
-        "-e",
-        "--end",
-        type=str,
-        help='Where should consumption stop/end? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.',
-        default="never",
     )
 
     parser.add_argument(
@@ -156,6 +167,10 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    if args.log:
+        logging.basicConfig(filename=args.log, level=logging.INFO)
+    else:
+        logging.disable(logging.CRITICAL)
     if args.list:
         print_topics(args.broker)
         exit(0)
