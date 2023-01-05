@@ -138,13 +138,6 @@ class CursesRenderer:
         info_rows.append("-" * 80)
         info_rows.append(
             timestamp_format.format(
-                "Receive time",
-                time_to_str(current_message.local_timestamp),
-                get_time_diff(now, current_message.local_timestamp),
-            )
-        )
-        info_rows.append(
-            timestamp_format.format(
                 "Message time",
                 time_to_str(current_message.timestamp),
                 get_time_diff(now, current_message.timestamp),
@@ -155,6 +148,13 @@ class CursesRenderer:
                 "Kafka time",
                 time_to_str(current_message.kafka_timestamp),
                 get_time_diff(now, current_message.kafka_timestamp),
+            )
+        )
+        info_rows.append(
+            timestamp_format.format(
+                "Receive time",
+                time_to_str(current_message.local_timestamp),
+                get_time_diff(now, current_message.local_timestamp),
             )
         )
         if height > DEFAULT_LIST_ROWS + 3:
