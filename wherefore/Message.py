@@ -341,6 +341,9 @@ class Message:
         self._offset = kafka_msg.offset
         self._size = len(kafka_msg.value)
 
+    def __repr__(self):
+        return f"{self._message_type}/{self._source_name}/{self._message_time}/{self._kafka_time}/{self._data}"
+
     @property
     def source_hash(self) -> bytes:
         return self._source_hash

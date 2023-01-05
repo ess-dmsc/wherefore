@@ -76,7 +76,7 @@ def print_topics(broker: str):
         print(t)
 
 
-def main(broker: str, topic: str, partition: int, start: str, end: str, schemas: Optional[List[str]]):
+def main(broker: str, topic: str, partition: int, start: str, end: str, schemas: Optional[List[str]], source_name: Optional[str]):
     try:
         tracker = KafkaMessageTracker(
             broker,
@@ -85,6 +85,7 @@ def main(broker: str, topic: str, partition: int, start: str, end: str, schemas:
             start=extract_start(start),
             stop=extract_end(end),
             schemas=schemas,
+            source_name=source_name,
         )
     except RuntimeError as e:
         print(f"Unable to enter run loop due to: {e}")
@@ -166,6 +167,12 @@ if __name__ == "__main__":
         help='Space-separated list of schemas. Only messages with these schemas will be shown.',
     )
 
+    parser.add_argument(
+        "--source-name",
+        type=str,
+        help='Monitor Kafka messages with this source_name',
+    )
+
     args = parser.parse_args()
     if args.log:
         logging.basicConfig(filename=args.log, level=logging.INFO)
@@ -174,4 +181,4 @@ if __name__ == "__main__":
     if args.list:
         print_topics(args.broker)
         exit(0)
-    main(args.broker, args.topic, args.partition, args.start, args.end, args.schemas)
+    main(args.broker, args.topic, args.partition, args.start, args.end, args.schemas, args.source_name)
