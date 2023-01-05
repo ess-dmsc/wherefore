@@ -7,23 +7,25 @@ Simple tool for listing known flatbuffer sources on a Kafka topic.
 
 ```
 python wherefore.py -h
-usage: wherefore.py [-h] -b BROKER (-t TOPIC | -l) [-p PARTITION] [-s START] [-e END]
+usage: wherefore.py [-h] -b BROKER (-t TOPIC | -l) [-e END] [--log LOG] [-p PARTITION] [-s START]
+                    [-S [{6s4t,ADAr,NDAr,al00,answ,ep00,ep01,ev42,ev44,f142,f144,hs00,hs01,json,mo01,ns10,pl72,rf5k,se00,senv,tdct,wrdn,x5f2} ...]]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -t TOPIC, --topic TOPIC
                         Topic name to listen to.
-  -l, --list            List the topics on the current Kafka cluster and exit. Does not work with the `-t`, `-s`, `-p` and `-e`
-                        arguments.
+  -l, --list            List the topics on the current Kafka cluster and exit. Does not work with the `-t`, `-s`, `-p` and `-e` arguments.
+  -e END, --end END     Where should consumption stop/end? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s 1611167278s`), offset
+                        (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.
+  --log LOG             File name to write log messages to. Logging is disabled by default.
   -p PARTITION, --partition PARTITION
                         Partition to connect to.
   -s START, --start START
-                        Where should consumption start? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s
-                        1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `beginning`, `end`. Each one
-                        of these can have an integer modifier at the end which offsets the start location. E.g. `-s end-10` or
-                        `-s "2012-01-01 12:30:12+500"`
-  -e END, --end END     Where should consumption stop/end? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g.
-                        `-s 1611167278s`), offset (e.g. `-s 1548647`) or one of the following strings: `end`, `never`.
+                        Where should consumption start? Takes a datetime (e.g. `-s "2012-01-01 12:30:12"`), timestamp (e.g. `-s 1611167278s`), offset
+                        (e.g. `-s 1548647`) or one of the following strings: `beginning`, `end`. Each one of these can have an integer modifier at the
+                        end which offsets the start location. E.g. `-s end-10` or `-s "2012-01-01 12:30:12+500"`
+  -S [{6s4t,ADAr,NDAr,al00,answ,ep00,ep01,ev42,ev44,f142,f144,hs00,hs01,json,mo01,ns10,pl72,rf5k,se00,senv,tdct,wrdn,x5f2} ...], --schemas [{6s4t,ADAr,NDAr,al00,answ,ep00,ep01,ev42,ev44,f142,f144,hs00,hs01,json,mo01,ns10,pl72,rf5k,se00,senv,tdct,wrdn,x5f2} ...]
+                        Space-separated list of schemas. Only messages with these schemas will be shown.
 
 required arguments:
   -b BROKER, --broker BROKER
