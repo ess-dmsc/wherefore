@@ -1,4 +1,5 @@
 import logging
+import string
 
 from streaming_data_types.utils import get_schema as get_schema
 from streaming_data_types import (
@@ -55,7 +56,7 @@ def ev44_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     extracted = deserialise_ev44(data)
     return (
         extracted.source_name,
-        datetime.fromtimestamp(extracted.reference_time / 1e9, tz=timezone.utc),
+        datetime.fromtimestamp(extracted.reference_time[0] / 1e9, tz=timezone.utc),
         f"Nr of events: {len(extracted.time_of_flight)}",
     )
 
@@ -313,6 +314,7 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
         return "Unknown", "Unknown", None, "No data"
     try:
         source, timestamp, display_message = extractor(message_data)
+        source = ''.join(letter for letter in source if letter in string.printable)
     except Exception as exc:
         logging.exception(f"Error decoding schema {message_type}: {exc}")
         return message_type, "Unknown", None, exc
