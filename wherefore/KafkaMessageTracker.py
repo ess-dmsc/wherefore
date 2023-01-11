@@ -33,6 +33,7 @@ def thread_function(
     out_queue: Queue,
     topic_partition,
     schemas: Optional[List[str]] = None,
+    source_name: Optional[str] = None,
 ):
     known_sources: Dict[bytes, DataSource] = {}
     start_time = datetime.now(tz=timezone.utc)
@@ -46,6 +47,9 @@ def thread_function(
             new_msg = Message(kafka_msg)
             if schemas:
                 if new_msg.message_type not in schemas:
+                    continue
+            if source_name:
+                if new_msg.source_name != source_name:
                     continue
             if type(stop) is int and new_msg.offset > stop:
                 continue
@@ -102,6 +106,7 @@ class KafkaMessageTracker:
         ] = PartitionOffset.END,
         stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER,
         schemas: Optional[List[str]] = None,
+        source_name: Optional[str] = None,
     ):
         self.to_thread = Queue()
         self.from_thread = Queue(maxsize=100)
@@ -187,6 +192,7 @@ class KafkaMessageTracker:
                 "stop": stop,
                 "topic_partition": topic_partition,
                 "schemas": schemas,
+                "source_name": source_name,
             },
         )
         self.thread.start()
