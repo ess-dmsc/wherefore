@@ -81,15 +81,23 @@ def print_topics(broker: str):
         print(t)
 
 
-def process_message(msg: Message) -> None:
+def process_message(msg: Message, datasource=None) -> None:
+    now = datetime.now(tz=timezone.utc)
     prefix = "latency.epics_to_consumer"
     sender = Sender(GRAPHITE_ADDRESS, prefix=prefix)
-    now = datetime.now(tz=timezone.utc)
-    latency = (now - msg.timestamp).total_seconds()
-    logging.debug(f"Pushing metric: {now.timestamp()} {prefix}.{msg.source_name} {latency}")
-    sender.send(
-        msg.source_name, latency, now.timestamp()
-    )
+    if msg.source_name == "YMIR-TS:Ctrl-EVR-01:EvtFCnt-I":
+    	latency = (now - msg.timestamp).total_seconds()
+    	#logging.info(f"Pushing metric: {now.timestamp()} {prefix}.{msg.source_name} {latency}")
+    	sender.send(
+    	    msg.source_name, latency, now.timestamp()
+    	)
+    elif msg.source_name == "YMIR-TS:Ctrl-EVR-01:01-TS-I" and datasource:
+    	#logging.info(f"Pushing metric: {now.timestamp()} {prefix}.{msg.source_name} {latency}")
+    	sender.send(f"{msg.source_name}.processed_messages", datasource.processed_messages, now.timestamp())
+    	sender.send(f"{msg.source_name}.messages_per_second", datasource.messages_per_second, now.timestamp())
+    	sender.send(f"{msg.source_name}.bytes_per_second", datasource.bytes_per_second, now.timestamp())
+    	sender.send(f"{msg.source_name}.bytes_received", datasource.bytes_received, now.timestamp())
+    	sender.send(f"{msg.source_name}.message_size", msg.size, now.timestamp())
 
 
 def main(broker: str, topic: str, partition: int, start: str, end: str, schemas: Optional[List[str]], source_name: Optional[str]):
@@ -106,7 +114,9 @@ def main(broker: str, topic: str, partition: int, start: str, end: str, schemas:
     except RuntimeError as e:
         print(f"Unable to enter run loop due to: {e}")
         sys.exit(1)
-    while True:
+    count = 0
+    while count < 7*100:
+        count += 1
         try:
             latest_update = tracker.get_latest_values()
             if latest_update is not None and len(latest_update) > 0:
@@ -129,9 +139,11 @@ def main(broker: str, topic: str, partition: int, start: str, end: str, schemas:
                             datasource
                         ))
                         continue
-                    process_message(datasource.last_message)
-                    return
-            time.sleep(0.01)
+                    if count % 100 == 0:
+                        process_message(datasource.last_message, datasource)
+                    #return
+            if count % 100 == 0:
+                time.sleep(10)
         except Exception as e:
             logging.exception(f"Error in processing loop: {e}")
         except KeyboardInterrupt:
