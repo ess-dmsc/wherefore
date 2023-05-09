@@ -230,7 +230,7 @@ if __name__ == "__main__":
     )
 
     if args.list:
-        print_topics(args.broker)
+        print_topics(args.broker, kafka_security_config)
         exit(0)
 
     main(args.broker, args.topic, args.partition, args.start, args.end, kafka_security_config, args.schemas, args.source_name)
