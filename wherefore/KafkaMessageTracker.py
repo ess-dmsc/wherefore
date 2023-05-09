@@ -105,16 +105,21 @@ class KafkaMessageTracker:
             Union[int, datetime, PartitionOffset], Optional[int]
         ] = PartitionOffset.END,
         stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER,
+        security_config: Dict[str, str] = None,
         schemas: Optional[List[str]] = None,
         source_name: Optional[str] = None,
     ):
         self.to_thread = Queue()
         self.from_thread = Queue(maxsize=100)
 
+        if security_config is None:
+            security_config = {}
+
         consumer = KafkaConsumer(
             bootstrap_servers=broker,
             fetch_max_bytes=52428800 * 6,
             consumer_timeout_ms=100,
+            **security_config
         )
         existing_topics = consumer.topics()
         self.current_msg = None

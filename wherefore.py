@@ -1,14 +1,15 @@
-import argparse
+import configargparse as argparse
 import logging
 import sys
 from wherefore.KafkaMessageTracker import KafkaMessageTracker, PartitionOffset
+from wherefore.KafkaSecurityConfig import get_kafka_security_config
 from wherefore.KafkaTopicPartitions import get_topic_partitions
 from wherefore.Message import TYPE_EXTRACTOR_MAP
 import time
 from curses_renderer import CursesRenderer
 import re
 from datetime import datetime, timezone
-from typing import Tuple, Optional, Union, List
+from typing import Tuple, Optional, Union, List, Dict
 
 
 def extract_point(point: str) -> Tuple[Union[datetime, int, str], Optional[int]]:
@@ -68,15 +69,15 @@ def extract_end(end: str):
     return end_point[0]
 
 
-def print_topics(broker: str):
-    topic_partitions = get_topic_partitions(broker)
+def print_topics(broker: str, security_config: Dict[str, str]):
+    topic_partitions = get_topic_partitions(broker, security_config)
     topics = [value["name"] for value in topic_partitions]
     topics.sort()
     for t in topics:
         print(t)
 
 
-def main(broker: str, topic: str, partition: int, start: str, end: str, schemas: Optional[List[str]], source_name: Optional[str]):
+def main(broker: str, topic: str, partition: int, start: str, end: str, security_config: Dict[str, str], schemas: Optional[List[str]], source_name: Optional[str]):
     try:
         tracker = KafkaMessageTracker(
             broker,
@@ -84,6 +85,7 @@ def main(broker: str, topic: str, partition: int, start: str, end: str, schemas:
             partition=partition,
             start=extract_start(start),
             stop=extract_end(end),
+            security_config=security_config,
             schemas=schemas,
             source_name=source_name,
         )
@@ -118,6 +120,8 @@ if __name__ == "__main__":
 
     required_args = parser.add_argument_group("required arguments")
     mutex_args = parser.add_mutually_exclusive_group(required=True)
+    kafka_sec_args = parser.add_argument_group("Kafka security arguments")
+
     required_args.add_argument(
         "-b", "--broker", type=str, help="Address of the kafka broker.", required=True
     )
@@ -173,12 +177,60 @@ if __name__ == "__main__":
         help='Monitor Kafka messages with this source_name',
     )
 
+    kafka_sec_args.add_argument(
+        "-kc",
+        "--kafka-config-file",
+        is_config_file=True,
+        help="Kafka security configuration file",
+    )
+
+    kafka_sec_args.add_argument(
+        "--security-protocol",
+        type=str,
+        help="Kafka security protocol",
+    )
+
+    kafka_sec_args.add_argument(
+        "--sasl-mechanism",
+        type=str,
+        help="Kafka SASL mechanism",
+    )
+
+    kafka_sec_args.add_argument(
+        "--sasl-username",
+        type=str,
+        help="Kafka SASL username",
+    )
+
+    kafka_sec_args.add_argument(
+        "--sasl-password",
+        type=str,
+        help="Kafka SASL password",
+    )
+
+    kafka_sec_args.add_argument(
+        "--ssl-cafile",
+        type=str,
+        help="Kafka SSL CA certificate path",
+    )
+
     args = parser.parse_args()
+
     if args.log:
         logging.basicConfig(filename=args.log, level=logging.INFO)
     else:
         logging.disable(logging.CRITICAL)
+
+    kafka_security_config = get_kafka_security_config(
+        args.security_protocol,
+        args.sasl_mechanism,
+        args.sasl_username,
+        args.sasl_password,
+        args.ssl_cafile,
+    )
+
     if args.list:
         print_topics(args.broker)
         exit(0)
-    main(args.broker, args.topic, args.partition, args.start, args.end, args.schemas, args.source_name)
+
+    main(args.broker, args.topic, args.partition, args.start, args.end, kafka_security_config, args.schemas, args.source_name)
