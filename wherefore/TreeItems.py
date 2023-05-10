@@ -101,7 +101,7 @@ class TopicItem:
     ):
         self._partitions.insert(
             self.get_partition_insert_location(partition),
-            PartitionItem(partition, self, broker, start, stop, enable, security_config),
+            PartitionItem(partition, self, broker, start, stop, security_config, enable),
         )
 
     def child(self, row: int) -> "PartitionItem":
