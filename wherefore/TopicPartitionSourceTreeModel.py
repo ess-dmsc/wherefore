@@ -51,6 +51,7 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
         known_topics,
         start: typing.Union[int, datetime, PartitionOffset],
         stop: typing.Union[int, datetime, PartitionOffset],
+        security_config: typing.Dict[str, str],
         enable_new_partition: bool = True,
     ):
         for c_topic in known_topics:
@@ -77,6 +78,7 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
                         self.kafka_broker,
                         start,
                         stop,
+                        security_config,
                         enable_new_partition,
                     )
                     self.endInsertRows()

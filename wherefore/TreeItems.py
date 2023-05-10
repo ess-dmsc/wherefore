@@ -96,11 +96,12 @@ class TopicItem:
         broker: str,
         start: Union[int, datetime, PartitionOffset],
         stop: Union[int, datetime, PartitionOffset],
+        security_config: Dict[str, str],
         enable: bool = True,
     ):
         self._partitions.insert(
             self.get_partition_insert_location(partition),
-            PartitionItem(partition, self, broker, start, stop, enable),
+            PartitionItem(partition, self, broker, start, stop, enable, security_config),
         )
 
     def child(self, row: int) -> "PartitionItem":
@@ -145,6 +146,7 @@ class PartitionItem:
         broker: str,
         start: Union[int, datetime, PartitionOffset] = PartitionOffset.END,
         stop: Union[int, datetime, PartitionOffset] = PartitionOffset.NEVER,
+        security_config: Dict[str, str] = None,
         enable: bool = True,
     ):
         super().__init__()
@@ -158,6 +160,10 @@ class PartitionItem:
         self._message_tracker_future: Optional[Future] = None
         self._start = start
         self._stop = stop
+        if security_config is None:
+            self._security_config = {}
+        else:
+            self._security_config = security_config
         if enable:
             self.start_message_monitoring()
 
@@ -186,7 +192,7 @@ class PartitionItem:
     def start_message_monitoring(self):
         if self._broker is not None and self._broker != "" and self._enabled:
             launch_tracker = lambda broker, topic, partition: KafkaMessageTracker(
-                broker, topic, partition, (self._start, None), self._stop
+                broker, topic, partition, (self._start, None), self._stop, self._security_config
             )
             self._message_tracker_future = self._thread_pool.submit(
                 launch_tracker, self._broker, self._parent.name, self.partition_id
