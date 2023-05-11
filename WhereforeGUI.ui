@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>858</width>
-    <height>631</height>
+    <width>1010</width>
+    <height>662</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -34,14 +34,104 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
-     <layout class="QHBoxLayout" name="consumerBarLayout">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetDefaultConstraint</enum>
+     <layout class="QVBoxLayout" name="verticalLayout_8">
+      <property name="bottomMargin">
+       <number>0</number>
       </property>
       <item>
-       <layout class="QHBoxLayout" name="brokerAddressLayout">
+       <layout class="QHBoxLayout" name="consumerBarLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
+        </property>
         <item>
-         <widget class="QLabel" name="brokerAddressLabel">
+         <layout class="QHBoxLayout" name="brokerAddressLayout">
+          <item>
+           <widget class="QLabel" name="brokerAddressLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Broker address</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="brokerAddressEdit"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="Line" name="line1_1">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="startAtLabel">
+          <property name="text">
+           <string>Start at</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="startAtSelector"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="startOffsetEdit">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDateTimeEdit" name="startTimeEdit"/>
+        </item>
+        <item>
+         <widget class="Line" name="line1_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="endAtLabel">
+          <property name="text">
+           <string>Stop at</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="endAtSelector"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="endOffsetEdit">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDateTimeEdit" name="endTimeEdit"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="kafkaConfigFileLayout">
+        <item>
+         <widget class="QLabel" name="kafkaConfigFileLabel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -49,74 +139,34 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Broker address</string>
+           <string>Configuration file:</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="brokerAddressEdit"/>
+         <widget class="QLabel" name="kafkaConfigFileValueLabel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>(unset)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="Line" name="line1_1">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="startAtLabel">
-        <property name="text">
-         <string>Start at</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="startAtSelector"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="startOffsetEdit">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDateTimeEdit" name="startTimeEdit"/>
-      </item>
-      <item>
-       <widget class="Line" name="line1_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="endAtLabel">
-        <property name="text">
-         <string>Stop at</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="endAtSelector"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="endOffsetEdit">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDateTimeEdit" name="endTimeEdit"/>
       </item>
      </layout>
     </item>
@@ -152,7 +202,7 @@
           </item>
           <item>
            <widget class="QComboBox" name="enableDefaultComboBox">
-            <property name="placeholderText">
+            <property name="placeholderText" stdset="0">
              <string/>
             </property>
            </widget>
@@ -559,8 +609,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>858</width>
-     <height>22</height>
+     <width>1010</width>
+     <height>24</height>
     </rect>
    </property>
   </widget>

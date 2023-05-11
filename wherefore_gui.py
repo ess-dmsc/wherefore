@@ -1,3 +1,4 @@
+import configargparse as argparse
 import PyQt5.QtWidgets as QtWidgets
 from PyQt5.QtCore import QSettings, QTimer
 import PyQt5.uic
@@ -6,6 +7,7 @@ from pathlib import Path
 from typing import Optional, Union
 from led import Led
 from concurrent.futures import ThreadPoolExecutor
+from wherefore.KafkaSecurityConfig import get_kafka_security_config
 from wherefore.KafkaTopicPartitions import get_topic_partitions
 from wherefore.KafkaMessageTracker import PartitionOffset
 from wherefore.TopicPartitionSourceTreeModel import TopicPartitionSourceTreeModel
@@ -37,9 +39,15 @@ class SourceViewerApp(QtWidgets.QMainWindow):
     UpdateRates = [10, 20, 50]
     SingleShot = False
 
-    def __init__(self):
+    def __init__(self, kafka_config_file=None, kafka_sec_config=None):
         # Parent constructor
         super(SourceViewerApp, self).__init__()
+
+        if kafka_sec_config is None:
+            kafka_sec_config = {}
+
+        self.kafka_sec_config = kafka_sec_config
+
         self.ui = None
         self.brokerEditTimer = QTimer()
         self.brokerEditTimer.timeout.connect(self.onBrokerEditTimer)
@@ -67,7 +75,7 @@ class SourceViewerApp(QtWidgets.QMainWindow):
         self.topicUpdateFuture = None
         self.topicPartitionModel = TopicPartitionSourceTreeModel()
         self.config = QSettings("ESS", "Wherefore")
-        self.setup()
+        self.setup(kafka_config_file)
         self.current_start: Union[
             int, datetime, PartitionOffset
         ] = self.getStartCondition()
@@ -75,12 +83,16 @@ class SourceViewerApp(QtWidgets.QMainWindow):
             int, datetime, PartitionOffset
         ] = self.getStopCondition()
 
-    def setup(self):
+    def setup(self, kafka_config_file):
         import WhereforeGUI
 
         self.ui = WhereforeGUI.Ui_MainWindow()
         self.ui.setupUi(self)
 
+        if kafka_config_file:
+            self.ui.kafkaConfigFileLabel.setEnabled(True)
+            self.ui.kafkaConfigFileValueLabel.setText(kafka_config_file)
+            self.ui.kafkaConfigFileValueLabel.setEnabled(True)
         self.ui.startAtSelector.addItems(["beginning", "end", "offset", "timestamp"])
         self.ui.startAtSelector.setCurrentIndex(1)
         self.ui.endAtSelector.addItems(["never", "end", "offset", "timestamp"])
@@ -246,7 +258,7 @@ class SourceViewerApp(QtWidgets.QMainWindow):
     def onBrokerEditTimer(self):
         self.topicPartitionModel.set_kafka_broker(self.ui.brokerAddressEdit.text())
         self.topicUpdateFuture = self.thread_pool.submit(
-            get_topic_partitions, self.ui.brokerAddressEdit.text()
+            get_topic_partitions, self.ui.brokerAddressEdit.text(), self.kafka_sec_config
         )
 
     def onCheckForNewSources(self):
@@ -268,7 +280,7 @@ class SourceViewerApp(QtWidgets.QMainWindow):
                     self.ui.brokerLed.turn_on()
                     self.updateTopicTree(result)
                 self.topicUpdateFuture = self.thread_pool.submit(
-                    get_topic_partitions, self.ui.brokerAddressEdit.text()
+                    get_topic_partitions, self.ui.brokerAddressEdit.text(), self.kafka_sec_config
                 )
             except ValueError:
                 pass  # Ignore
@@ -278,7 +290,7 @@ class SourceViewerApp(QtWidgets.QMainWindow):
         if self.ui.enableDefaultComboBox.currentIndex() == 1:
             enable_new_partitions = False
         self.topicPartitionModel.update_topics(
-            known_topics, self.current_start, self.current_stop, enable_new_partitions
+            known_topics, self.current_start, self.current_stop, self.kafka_sec_config, enable_new_partitions
         )
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
@@ -341,7 +353,55 @@ if __name__ == "__main__":
             with open("WhereforeGUI.py", "w") as py_ui_file:
                 PyQt5.uic.compileUi(ui_file, py_ui_file)
 
+    parser = argparse.ArgumentParser()
+    kafka_sec_args = parser.add_argument_group("Kafka security arguments")
+    kafka_sec_args.add_argument(
+        "-kc",
+        "--kafka-config-file",
+        is_config_file=True,
+        help="Kafka security configuration file",
+    )
+
+    kafka_sec_args.add_argument(
+        "--security-protocol",
+        type=str,
+        help="Kafka security protocol",
+    )
+
+    kafka_sec_args.add_argument(
+        "--sasl-mechanism",
+        type=str,
+        help="Kafka SASL mechanism",
+    )
+
+    kafka_sec_args.add_argument(
+        "--sasl-username",
+        type=str,
+        help="Kafka SASL username",
+    )
+
+    kafka_sec_args.add_argument(
+        "--sasl-password",
+        type=str,
+        help="Kafka SASL password",
+    )
+
+    kafka_sec_args.add_argument(
+        "--ssl-cafile",
+        type=str,
+        help="Kafka SSL CA certificate path",
+    )
+
+    args = parser.parse_args()
+    kafka_security_config = get_kafka_security_config(
+        args.security_protocol,
+        args.sasl_mechanism,
+        args.sasl_username,
+        args.sasl_password,
+        args.ssl_cafile,
+    )
+
     app = QtWidgets.QApplication([])
-    main_window = SourceViewerApp()
-    main_window.setup()
+    main_window = SourceViewerApp(args.kafka_config_file, kafka_security_config)
+    main_window.setup(args.kafka_config_file)
     app.exec_()

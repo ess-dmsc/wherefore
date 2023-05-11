@@ -5,9 +5,10 @@ from kafka.errors import NoBrokersAvailable
 
 def get_topic_partitions(
     broker: str,
+    security_config: Dict[str, str],
 ) -> Optional[List[Dict[str, Union[str, List[int]]]]]:
     try:
-        consumer = KafkaConsumer(bootstrap_servers=broker)
+        consumer = KafkaConsumer(bootstrap_servers=broker, **security_config)
         known_topics = consumer.topics()
         list_of_topics = []
         for topic in known_topics:
