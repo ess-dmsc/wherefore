@@ -21,6 +21,7 @@ builders = pipeline_builder.createBuilders { container ->
     container.sh """
       which python
       python --version
+      python -m pip install --user --upgrade pip
       python -m pip install --user -r ${pipeline_builder.project}/requirements-dev.txt
     """
   } // stage
@@ -44,11 +45,11 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Test") {
     container.sh """
       cd ${pipeline_builder.project}
-      pytest --cov --cov-report=html --cov-report=term .
+      python -m pytest --cov --cov-report=html --cov-report=term .
       tar czf htmlcov.tar.gz htmlcov
     """
     container.copyFrom("${pipeline_builder.project}/htmlcov.tar.gz", ".")
-    archiveArtifacts = htmlcov.tar.gz
+    archiveArtifacts "htmlcov.tar.gz"
   } // stage
 }  // createBuilders
 
