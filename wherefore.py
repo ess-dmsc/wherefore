@@ -14,7 +14,7 @@ from typing import Tuple, Optional, Union, List, Dict
 
 def extract_point(point: str) -> Tuple[Union[datetime, int, str], Optional[int]]:
     match = re.match("(?P<timestamp>\d+)s(?P<offset>[+-]\d+)?$", point)
-    if match != None:
+    if match is not None:
         offset_int = None
         if match["offset"] is not None:
             offset_int = int(match["offset"])
@@ -25,7 +25,7 @@ def extract_point(point: str) -> Tuple[Union[datetime, int, str], Optional[int]]
     match = re.match(
         "(?P<offset_str>(?:never)|(?:end)|(?:beginning))(?P<offset>[+-]\d+)?$", point
     )
-    if match != None:
+    if match is not None:
         offset_int = None
         if match["offset"] is not None:
             offset_int = int(match["offset"])
@@ -35,7 +35,7 @@ def extract_point(point: str) -> Tuple[Union[datetime, int, str], Optional[int]]
             "never": PartitionOffset.NEVER,
         }[match["offset_str"]], offset_int
     match = re.match("(?P<offset_int>\d+)(?P<offset_to_offset>[+-]\d+)?$", point)
-    if match != None:
+    if match is not None:
         return_int = int(match["offset_int"])
         if match["offset_to_offset"] is not None:
             return_int += int(match["offset_to_offset"])

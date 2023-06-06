@@ -1,5 +1,5 @@
 from typing import List
-from math import ceil, floor
+from math import floor
 
 
 def generate_list(items: List, list_rows: int, selection: int):

@@ -61,7 +61,7 @@ def thread_function(
                 and kafka_msg.kafka_timestamp > stop
             ):
                 continue
-            if not kafka_msg.source_hash in known_sources:
+            if kafka_msg.source_hash not in known_sources:
                 known_sources[kafka_msg.source_hash] = DataSource(
                     kafka_msg.source_name, kafka_msg.message_type, start_time
                 )

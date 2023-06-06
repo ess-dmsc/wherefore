@@ -4,9 +4,7 @@ from PyQt5.QtCore import (
     Qt,
     QVariant,
     QMimeData,
-    QByteArray,
 )
-import PyQt5.QtWidgets as QtWidgets
 import typing
 from wherefore.TreeItems import RootItem, PartitionItem
 from datetime import datetime

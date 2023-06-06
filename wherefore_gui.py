@@ -11,9 +11,8 @@ from wherefore.KafkaSecurityConfig import get_kafka_security_config
 from wherefore.KafkaTopicPartitions import get_topic_partitions
 from wherefore.KafkaMessageTracker import PartitionOffset
 from wherefore.TopicPartitionSourceTreeModel import TopicPartitionSourceTreeModel
-from PyQt5.QtCore import QSettings
 from wherefore.TreeItems import PartitionItem, SourceItem
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 
 def datetime_to_str(timestamp: Optional[datetime], now: datetime):
