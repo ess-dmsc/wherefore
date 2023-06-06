@@ -77,7 +77,16 @@ def print_topics(broker: str, security_config: Dict[str, str]):
         print(t)
 
 
-def main(broker: str, topic: str, partition: int, start: str, end: str, security_config: Dict[str, str], schemas: Optional[List[str]], source_name: Optional[str]):
+def main(
+    broker: str,
+    topic: str,
+    partition: int,
+    start: str,
+    end: str,
+    security_config: Dict[str, str],
+    schemas: Optional[List[str]],
+    source_name: Optional[str],
+):
     try:
         tracker = KafkaMessageTracker(
             broker,
@@ -146,7 +155,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log",
         type=str,
-        help="File name to write log messages to. Logging is disabled by default."
+        help="File name to write log messages to. Logging is disabled by default.",
     )
 
     parser.add_argument(
@@ -168,13 +177,13 @@ if __name__ == "__main__":
         nargs="*",
         choices=sorted(TYPE_EXTRACTOR_MAP.keys()),
         default=None,
-        help='Space-separated list of schemas. Only messages with these schemas will be shown.',
+        help="Space-separated list of schemas. Only messages with these schemas will be shown.",
     )
 
     parser.add_argument(
         "--source-name",
         type=str,
-        help='Monitor Kafka messages with this source_name',
+        help="Monitor Kafka messages with this source_name",
     )
 
     kafka_sec_args.add_argument(
@@ -233,4 +242,13 @@ if __name__ == "__main__":
         print_topics(args.broker, kafka_security_config)
         exit(0)
 
-    main(args.broker, args.topic, args.partition, args.start, args.end, kafka_security_config, args.schemas, args.source_name)
+    main(
+        args.broker,
+        args.topic,
+        args.partition,
+        args.start,
+        args.end,
+        kafka_security_config,
+        args.schemas,
+        args.source_name,
+    )

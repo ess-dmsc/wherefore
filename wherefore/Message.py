@@ -308,7 +308,9 @@ TYPE_EXTRACTOR_MAP = {
 
 
 def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
-    message_type = get_schema(message_data)  # TODO add error handling for messages too short
+    message_type = get_schema(
+        message_data
+    )  # TODO add error handling for messages too short
     try:
         extractor = TYPE_EXTRACTOR_MAP[message_type]
     except KeyError:

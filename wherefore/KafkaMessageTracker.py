@@ -116,7 +116,12 @@ class KafkaMessageTracker:
             raise RuntimeError(
                 f'Partition {partition} for topic "{topic}" does not exist.'
             )
-        consumer.assign(topic, [partition,])
+        consumer.assign(
+            topic,
+            [
+                partition,
+            ],
+        )
         first_offset = consumer.beginning_offset(topic, partition)
         last_offset = consumer.end_offset(topic, partition)
         origin_offset = None

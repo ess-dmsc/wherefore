@@ -26,7 +26,9 @@ def get_f142_config(msg: bytes) -> Dict[str, Any]:
         np.dtype("float64"): "float64",
     }
     result = deserialise_f142(msg)
-    return_dict = {"type": numpy_type_to_string[result.value.dtype], }
+    return_dict = {
+        "type": numpy_type_to_string[result.value.dtype],
+    }
     if len(result.value.shape) == 1:
         return_dict["array_size"] = result.value.shape[0]
     return return_dict
@@ -48,7 +50,9 @@ def get_f144_config(msg: bytes) -> Dict[str, Any]:
         np.dtype("float64"): "float64",
     }
     result = deserialise_f144(msg)
-    return_dict = {"type": numpy_type_to_string[result.value.dtype], }
+    return_dict = {
+        "type": numpy_type_to_string[result.value.dtype],
+    }
     if len(result.value.shape) == 1:
         return_dict["array_size"] = result.value.shape[0]
     return return_dict
@@ -70,7 +74,9 @@ def get_se00_config(msg: bytes) -> Dict[str, Any]:
         np.dtype("float64"): "float64",
     }
     result = deserialise_se00(msg)
-    return {"type": numpy_type_to_string[result.values.dtype], }
+    return {
+        "type": numpy_type_to_string[result.values.dtype],
+    }
 
 
 def get_senv_config(msg: bytes) -> Dict[str, Any]:
@@ -87,7 +93,9 @@ def get_senv_config(msg: bytes) -> Dict[str, Any]:
         np.dtype("uint64"): "uint64",
     }
     result = deserialise_senv(msg)
-    return {"type": numpy_type_to_string[result.values.dtype], }
+    return {
+        "type": numpy_type_to_string[result.values.dtype],
+    }
 
 
 def get_ADAr_config(msg: bytes) -> Dict[str, Any]:
@@ -106,7 +114,10 @@ def get_ADAr_config(msg: bytes) -> Dict[str, Any]:
         np.dtype("float64"): "float64",
     }
     result = deserialise_ADAr(msg)
-    return {"type": numpy_type_to_string[result.data.dtype], "array_size": result.data.shape}
+    return {
+        "type": numpy_type_to_string[result.data.dtype],
+        "array_size": result.data.shape,
+    }
 
 
 def get_extra_config(msg: bytes) -> Dict:

@@ -1,4 +1,11 @@
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant, QMimeData, QByteArray
+from PyQt5.QtCore import (
+    QAbstractItemModel,
+    QModelIndex,
+    Qt,
+    QVariant,
+    QMimeData,
+    QByteArray,
+)
 import PyQt5.QtWidgets as QtWidgets
 import typing
 from wherefore.TreeItems import RootItem, PartitionItem
@@ -31,7 +38,7 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
         self.enable_all(False)
 
     def mimeTypes(self):
-        return ["text/plain", "application/json", 'streaming/writer_module']
+        return ["text/plain", "application/json", "streaming/writer_module"]
 
     def mimeData(self, indexes):
         mime_data = QMimeData()
@@ -42,8 +49,8 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
         config = {**config, **get_extra_config(source._reference_msg._value)}
         data_string = dumps({"module": source.type, "config": config})
         mime_data.setText(data_string)
-        mime_data.setData('application/json', data_string.encode("utf-8"))
-        mime_data.setData('streaming/writer_module', data_string.encode("utf-8"))
+        mime_data.setData("application/json", data_string.encode("utf-8"))
+        mime_data.setData("streaming/writer_module", data_string.encode("utf-8"))
         return mime_data
 
     def update_topics(
@@ -102,7 +109,9 @@ class TopicPartitionSourceTreeModel(QAbstractItemModel):
                         self.beginInsertRows(
                             partition_index, source_location, source_location
                         )
-                        c_partition.add_source(source.source_name, source.source_type, source.last_message)
+                        c_partition.add_source(
+                            source.source_name, source.source_type, source.last_message
+                        )
                         self.endInsertRows()
 
     def columnCount(self, parent: QModelIndex = ...) -> int:

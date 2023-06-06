@@ -101,7 +101,9 @@ class TopicItem:
     ):
         self._partitions.insert(
             self.get_partition_insert_location(partition),
-            PartitionItem(partition, self, broker, start, stop, security_config, enable),
+            PartitionItem(
+                partition, self, broker, start, stop, security_config, enable
+            ),
         )
 
     def child(self, row: int) -> "PartitionItem":
@@ -192,7 +194,12 @@ class PartitionItem:
     def start_message_monitoring(self):
         if self._broker is not None and self._broker != "" and self._enabled:
             launch_tracker = lambda broker, topic, partition: KafkaMessageTracker(
-                broker, topic, partition, (self._start, None), self._stop, self._security_config
+                broker,
+                topic,
+                partition,
+                (self._start, None),
+                self._stop,
+                self._security_config,
             )
             self._message_tracker_future = self._thread_pool.submit(
                 launch_tracker, self._broker, self._parent.name, self.partition_id
@@ -302,7 +309,13 @@ class PartitionItem:
 
 
 class SourceItem:
-    def __init__(self, source_name: str, source_type: str, parent: PartitionItem, reference_msg: Optional[bytes] = None):
+    def __init__(
+        self,
+        source_name: str,
+        source_type: str,
+        parent: PartitionItem,
+        reference_msg: Optional[bytes] = None,
+    ):
         super().__init__()
         self._source_name = source_name
         self._source_type = source_type
