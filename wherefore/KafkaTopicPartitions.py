@@ -1,20 +1,27 @@
-from kafka import KafkaConsumer
-from typing import Union, Dict, List, Optional
-from kafka.errors import NoBrokersAvailable
+from typing import Union, Dict, List, Optional, Set
+from confluent_kafka import KafkaException
+from confluent_kafka.admin import AdminClient
 
 
 def get_topic_partitions(
     broker: str,
     security_config: Dict[str, str],
-) -> Optional[List[Dict[str, Union[str, List[int]]]]]:
+) -> Optional[List[Dict[str, Union[str, Set[int]]]]]:
+    """
+    Get list of topics and associated partitions for the Kafka broker.
+
+    :param broker: Broker address.
+    :param security_config: Dict with security configuration.
+    :return: List of topics and partitions.
+    """  # TODO: update documentation
     try:
-        consumer = KafkaConsumer(bootstrap_servers=broker, **security_config)
-        known_topics = consumer.topics()
-        list_of_topics = []
-        for topic in known_topics:
-            found_partitions = consumer.partitions_for_topic(topic)
-            topic_entry = {"name": topic, "partitions": found_partitions}
-            list_of_topics.append(topic_entry)
-        return list_of_topics
-    except NoBrokersAvailable:
+        security_config["bootstrap.servers"] = broker  # TODO
+        c = AdminClient(security_config)
+        metadata = c.list_topics()
+        topics = []
+        for tm in metadata.topics.values():
+            partitions = set(p.id for p in tm.partitions.values())
+            topics.append({"name": tm.topic, "partitions": partitions})
+        return topics
+    except KafkaException:
         return None
