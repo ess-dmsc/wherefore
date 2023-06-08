@@ -1,11 +1,15 @@
 from os import getpid
 from typing import Dict, List, Set
 from uuid import uuid1
-from confluent_kafka import Consumer, TopicPartition, KafkaException
+from confluent_kafka import Consumer, KafkaError, KafkaException, TopicPartition
 from wherefore.Message import Message
 
 
 FETCH_MAX_BYTES = 52428800 * 6
+
+
+class NoBrokersAvailableError(Exception):
+    pass
 
 
 def make_kafka_consumer(bootstrap_servers, security_config):
@@ -36,7 +40,7 @@ class KafkaConsumer:
         try:
             msgs = self._consumer.consume(max_msgs, timeout=self._timeout_s)
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
 
         return [Message(m) for m in msgs]
 
@@ -62,13 +66,13 @@ class KafkaConsumer:
         offsets = self._get_offsets(topic, partition)
         return offsets[1]
 
-    def _get_offsets(self, topic, partition):
+    def _get_offsets(self, topic: str, partition: int):
         tp = TopicPartition(topic, partition)
 
         try:
             offsets = self._consumer.get_watermark_offsets(tp)
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
 
         return offsets
 
@@ -81,11 +85,12 @@ class KafkaConsumer:
         try:
             md = self._consumer.list_topics()
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
 
         topics = set()
         for k in md.topics.keys():
             topics.add(k)
+
         return topics
 
     def partitions_for_topic(self, topic: str) -> Set[int]:
@@ -98,7 +103,7 @@ class KafkaConsumer:
         try:
             md = self._consumer.list_topics()
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
 
         try:
             tmd = md.topics[topic]
@@ -123,7 +128,7 @@ class KafkaConsumer:
         try:
             self._consumer.assign(tps)
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
 
     def offsets_for_times(self, partitions_and_times: Dict[int, int]) -> Dict[int, int]:
         """
@@ -135,7 +140,7 @@ class KafkaConsumer:
         try:
             a = self._consumer.assignment()
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
 
         tps = []
         for tp in a:
@@ -146,7 +151,7 @@ class KafkaConsumer:
         try:
             oft = self._consumer.offsets_for_times(tps)
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
 
         r = {}
         for tp in oft:
@@ -167,7 +172,7 @@ class KafkaConsumer:
         try:
             a = self._consumer.assignment()
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
 
         found = False
         for tp in a:
@@ -185,4 +190,12 @@ class KafkaConsumer:
         try:
             self._consumer.seek(tp)
         except KafkaException as e:
-            raise RuntimeError(e.args)
+            self._raise_from_kafka_exception(e)
+
+    def _raise_from_kafka_exception(self, exception: KafkaException):
+        """Extract error code from KafkaException and raise appropriate exception."""
+        kafka_error = exception.args[0]
+        if kafka_error.code() == KafkaError.BROKER_NOT_AVAILABLE:
+            raise NoBrokersAvailableError(exception.args)
+        else:
+            raise RuntimeError(exception.args)
