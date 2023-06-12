@@ -1,6 +1,6 @@
 # wherefore
 
-Simple tool for listing known flatbuffer sources on a Kafka topic.
+Simple tool for listing known flatbuffer sources on a Kafka topic. **Note: the GUI version is currently not working and needs to be updated after the migration to confluent-kafka.**
 
 
 ## Usage

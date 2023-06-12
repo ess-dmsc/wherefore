@@ -15,6 +15,9 @@ from wherefore.TreeItems import PartitionItem, SourceItem
 from datetime import datetime, timezone
 
 
+# TODO update for confluent-kafka
+
+
 def datetime_to_str(timestamp: Optional[datetime], now: datetime):
     if timestamp is None:
         return "n/a"

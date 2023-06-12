@@ -1,9 +1,12 @@
 from typing import List, Optional, Dict, Union
 from wherefore.KafkaMessageTracker import KafkaMessageTracker, PartitionOffset
 from concurrent.futures import ThreadPoolExecutor, Future
-from kafka.errors import NoBrokersAvailable
 from wherefore.DataSource import DataSource
+from wherefore.KafkaConsumer import NoBrokersAvailableError
 from datetime import datetime
+
+
+# TODO is NoBrokersAvailableError compatible with kafka.errors.NoBrokersAvailable?
 
 
 class RootItem:
@@ -178,7 +181,7 @@ class PartitionItem:
                 if self._message_tracker_future.done():
                     try:
                         self._message_tracker_future.result().stop_thread()
-                    except NoBrokersAvailable:
+                    except NoBrokersAvailableError:
                         pass
                 self._message_tracker_future = None
             self.start_message_monitoring()
@@ -216,7 +219,7 @@ class PartitionItem:
             try:
                 self._message_tracker = self._message_tracker_future.result()
                 self._message_tracker_future = None
-            except NoBrokersAvailable:
+            except NoBrokersAvailableError:
                 self.start_message_monitoring()
         elif (
             self._enabled
@@ -299,7 +302,7 @@ class PartitionItem:
                 # Note, this code will fail to stop the thread in some (corner) cases
                 try:
                     self._message_tracker_future.result().stop_thread()
-                except NoBrokersAvailable:
+                except NoBrokersAvailableError:
                     pass
             self._message_tracker_future = None
             if self._message_tracker is not None:
