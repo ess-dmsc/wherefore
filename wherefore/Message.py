@@ -325,24 +325,24 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
 
 
 class Message:
-    def __init__(self, kafka_msg):
+    def __init__(self, value, timestamp_s, offset):
         self._local_time = datetime.now(tz=timezone.utc)
         (
             self._message_type,
             self._source_name,
             self._message_time,
             self._data,
-        ) = extract_message_info(kafka_msg.value())
+        ) = extract_message_info(value)
         hash_generator = hashlib.sha256()
         hash_generator.update(self._source_name.encode())
         hash_generator.update(self._message_type.encode())
         self._source_hash = hash_generator.digest()
         self._kafka_time = datetime.fromtimestamp(
-            kafka_msg.timestamp()[1] / 1e3, tz=timezone.utc
+            timestamp_s, tz=timezone.utc
         )
-        self._value = kafka_msg.value()
-        self._offset = kafka_msg.offset()
-        self._size = len(kafka_msg.value())
+        self._value = value
+        self._offset = offset
+        self._size = len(value)
 
     def __repr__(self):
         return f"{self._message_type}/{self._source_name}/{self._message_time}/{self._kafka_time}/{self._data}"

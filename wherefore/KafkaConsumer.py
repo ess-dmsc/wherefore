@@ -1,3 +1,9 @@
+"""Wrap Kafka library consumer.
+
+The return types are mostly based on the previous types returned directly by
+kafka-python (now replaced with confluent-kafka).
+"""
+
 from os import getpid
 from typing import Dict, List, Set
 from uuid import uuid1
@@ -6,10 +12,6 @@ from wherefore.Message import Message
 
 
 FETCH_MAX_BYTES = 52428800 * 6
-
-
-class NoBrokersAvailableError(Exception):
-    pass
 
 
 def make_kafka_consumer(bootstrap_servers, security_config):
@@ -22,6 +24,14 @@ def make_kafka_consumer(bootstrap_servers, security_config):
     config.update(security_config)
     consumer = Consumer(config)
     return KafkaConsumer(consumer)
+
+
+class KafkaConsumerError(Exception):
+    pass
+
+
+class NoBrokersAvailableError(KafkaConsumerError):
+    pass
 
 
 class KafkaConsumer:
@@ -42,7 +52,11 @@ class KafkaConsumer:
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
-        return [Message(m) for m in msgs]
+        r = []
+        for m in msgs:
+            r.append(Message(m.value(), m.timestamp()[1]/1e3, m.offset()))
+
+        return r
 
     def beginning_offset(self, topic: str, partition: int) -> int:
         """
