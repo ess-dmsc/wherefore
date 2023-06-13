@@ -54,7 +54,7 @@ class KafkaConsumer:
 
         r = []
         for m in msgs:
-            r.append(Message(m.value(), m.timestamp()[1]/1e3, m.offset()))
+            r.append(Message(m.value(), m.timestamp()[1] / 1e3, m.offset()))
 
         return r
 

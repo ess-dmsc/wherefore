@@ -337,9 +337,7 @@ class Message:
         hash_generator.update(self._source_name.encode())
         hash_generator.update(self._message_type.encode())
         self._source_hash = hash_generator.digest()
-        self._kafka_time = datetime.fromtimestamp(
-            timestamp_s, tz=timezone.utc
-        )
+        self._kafka_time = datetime.fromtimestamp(timestamp_s, tz=timezone.utc)
         self._value = value
         self._offset = offset
         self._size = len(value)
