@@ -33,6 +33,7 @@ import numpy as np
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType,
 )
+
 # from streaming_data_types.epics_connection_ep01 import ConnectionInfo
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
@@ -275,7 +276,7 @@ def se00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     return (
         message.name,
         datetime.fromtimestamp(message.timestamp_unix_ns / 1e9, tz=timezone.utc),
-        f"Nr of elements: {len(message.values)}"
+        f"Nr of elements: {len(message.values)}",
     )
 
 
@@ -307,14 +308,16 @@ TYPE_EXTRACTOR_MAP = {
 
 
 def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
-    message_type = get_schema(message_data)
+    message_type = get_schema(
+        message_data
+    )  # TODO add error handling for messages too short
     try:
         extractor = TYPE_EXTRACTOR_MAP[message_type]
     except KeyError:
         return "Unknown", "Unknown", None, "No data"
     try:
         source, timestamp, display_message = extractor(message_data)
-        source = ''.join(letter for letter in source if letter in string.printable)
+        source = "".join(letter for letter in source if letter in string.printable)
     except Exception as exc:
         logging.exception(f"Error decoding schema {message_type}: {exc}")
         return message_type, "Unknown", None, exc
@@ -322,24 +325,22 @@ def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
 
 
 class Message:
-    def __init__(self, kafka_msg):
+    def __init__(self, value, timestamp_s, offset):
         self._local_time = datetime.now(tz=timezone.utc)
         (
             self._message_type,
             self._source_name,
             self._message_time,
             self._data,
-        ) = extract_message_info(kafka_msg.value)
+        ) = extract_message_info(value)
         hash_generator = hashlib.sha256()
         hash_generator.update(self._source_name.encode())
         hash_generator.update(self._message_type.encode())
         self._source_hash = hash_generator.digest()
-        self._kafka_time = datetime.fromtimestamp(
-            kafka_msg.timestamp / 1e3, tz=timezone.utc
-        )
-        self._value = kafka_msg.value
-        self._offset = kafka_msg.offset
-        self._size = len(kafka_msg.value)
+        self._kafka_time = datetime.fromtimestamp(timestamp_s, tz=timezone.utc)
+        self._value = value
+        self._offset = offset
+        self._size = len(value)
 
     def __repr__(self):
         return f"{self._message_type}/{self._source_name}/{self._message_time}/{self._kafka_time}/{self._data}"

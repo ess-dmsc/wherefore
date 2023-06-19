@@ -2,14 +2,14 @@ from threading import Thread
 from typing import Union, Dict, Optional, Tuple, List
 from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
-from kafka import KafkaConsumer, TopicPartition
+
 from queue import Queue, Empty, Full
 from wherefore.DataSource import DataSource
-from wherefore.Message import Message
+from wherefore.KafkaConsumer import KafkaConsumer, make_kafka_consumer
 from copy import copy
 
 
-CHECK_FOR_MSG_INTERVAL = 500
+MAX_MSGS_TO_CONSUME = 500
 UPDATE_STATUS_INTERVAL = timedelta(milliseconds=50)
 
 
@@ -31,7 +31,8 @@ def thread_function(
     stop: Union[datetime, int],
     in_queue: Queue,
     out_queue: Queue,
-    topic_partition,
+    topic: str,
+    partition: int,
     schemas: Optional[List[str]] = None,
     source_name: Optional[str] = None,
 ):
@@ -39,56 +40,43 @@ def thread_function(
     start_time = datetime.now(tz=timezone.utc)
     update_timer = datetime.now(tz=timezone.utc)
     while True:
-        messages_ctr = 0
-        for kafka_msg in consumer:
-            if messages_ctr == CHECK_FOR_MSG_INTERVAL:
-                break
-            messages_ctr += 1
-            new_msg = Message(kafka_msg)
+        for kafka_msg in consumer.consume(MAX_MSGS_TO_CONSUME):
             if schemas:
-                if new_msg.message_type not in schemas:
+                if kafka_msg.message_type not in schemas:
                     continue
             if source_name:
-                if new_msg.source_name != source_name:
+                if kafka_msg.source_name != source_name:
                     continue
-            if type(stop) is int and new_msg.offset > stop:
+            if type(stop) is int and kafka_msg.offset > stop:
                 continue
             if (
                 type(stop) is datetime
-                and new_msg.timestamp is not None
-                and new_msg.timestamp > stop
+                and kafka_msg.timestamp is not None
+                and kafka_msg.timestamp > stop
             ):
                 continue
             if (
                 type(stop) is datetime
-                and new_msg.timestamp is None
-                and new_msg.kafka_timestamp > stop
+                and kafka_msg.timestamp is None
+                and kafka_msg.kafka_timestamp > stop
             ):
                 continue
-            if not new_msg.source_hash in known_sources:
-                known_sources[new_msg.source_hash] = DataSource(
-                    new_msg.source_name, new_msg.message_type, start_time
+            if kafka_msg.source_hash not in known_sources:
+                known_sources[kafka_msg.source_hash] = DataSource(
+                    kafka_msg.source_name, kafka_msg.message_type, start_time
                 )
-            known_sources[new_msg.source_hash].process_message(new_msg)
+            known_sources[kafka_msg.source_hash].process_message(kafka_msg)
         if not in_queue.empty():
-            new_msg = in_queue.get()
-            if new_msg == "exit":
+            kafka_msg = in_queue.get()
+            if kafka_msg == "exit":
                 break
         now = datetime.now(tz=timezone.utc)
         if now - update_timer > UPDATE_STATUS_INTERVAL:
             update_timer = now
             try:
                 out_queue.put(copy(known_sources), block=False)
-                low_offset = consumer.beginning_offsets(
-                    [
-                        topic_partition,
-                    ]
-                )[topic_partition]
-                high_offset = consumer.end_offsets(
-                    [
-                        topic_partition,
-                    ]
-                )[topic_partition]
+                low_offset = consumer.beginning_offset(topic, partition)
+                high_offset = consumer.end_offset(topic, partition)
                 out_queue.put(HighLowOffset(low_offset, high_offset))
             except Full:
                 pass  # Do nothing
@@ -115,12 +103,7 @@ class KafkaMessageTracker:
         if security_config is None:
             security_config = {}
 
-        consumer = KafkaConsumer(
-            bootstrap_servers=broker,
-            fetch_max_bytes=52428800 * 6,
-            consumer_timeout_ms=100,
-            **security_config
-        )
+        consumer = make_kafka_consumer(broker, security_config)
         existing_topics = consumer.topics()
         self.current_msg = None
         self.current_offset_limits = HighLowOffset(-1, -1)
@@ -133,49 +116,35 @@ class KafkaMessageTracker:
             raise RuntimeError(
                 f'Partition {partition} for topic "{topic}" does not exist.'
             )
-        topic_partition = TopicPartition(topic, partition)
         consumer.assign(
+            topic,
             [
-                topic_partition,
-            ]
+                partition,
+            ],
         )
-        first_offset = consumer.beginning_offsets([topic_partition])[topic_partition]
-        last_offset = consumer.end_offsets([topic_partition])[topic_partition]
+        first_offset = consumer.beginning_offset(topic, partition)
+        last_offset = consumer.end_offset(topic, partition)
         origin_offset = None
         offset_to_offset = start[1]
         if start[0] == PartitionOffset.BEGINNING:
             origin_offset = first_offset
-            # consumer.seek_to_beginning()
-            # if type(start[1]) == int and start[1] > 0 and first_offset + start[1] <= last_offset:
-            #     consumer.seek(partition=topic_partition, offset=first_offset + start[1])
         elif start[0] == PartitionOffset.END or start == PartitionOffset.NEVER:
             origin_offset = last_offset
-            # consumer.seek_to_end()
-            # if type(start[1]) == int and start[1] < 0 and last_offset + start[1] >= first_offset:
-            #     consumer.seek(partition=topic_partition, offset=first_offset + start[1])
         elif type(start[0]) is int:
             if first_offset > start[0]:
                 origin_offset = first_offset
-                # consumer.seek_to_beginning()
             elif last_offset < start[0]:
                 origin_offset = last_offset
             else:
                 origin_offset = start[0]
-            #     consumer.seek_to_end()
-            # else:
-            #     consumer.seek(partition=topic_partition, offset=start[0])
         elif type(start[0]) is datetime:
-            found_offsets = consumer.offsets_for_times(
-                {topic_partition: int(start[0].timestamp() * 1000)}
+            offsets = consumer.offsets_for_times(
+                {partition: int(start[0].timestamp() * 1000)}
             )
-            if found_offsets[topic_partition] is None:
+            if offsets[partition] is None:
                 origin_offset = last_offset
             else:
-                origin_offset = found_offsets[topic_partition].offset
-
-            # if type(start[1]) == int:
-            #     used_offset += start[1]
-            # consumer.seek(partition=topic_partition, offset=used_offset)
+                origin_offset = offsets[partition]
         else:
             raise RuntimeError("Unknown start offset configured.")
 
@@ -185,7 +154,7 @@ class KafkaMessageTracker:
                 origin_offset = first_offset
             elif origin_offset > last_offset:
                 origin_offset = last_offset
-        consumer.seek(partition=topic_partition, offset=origin_offset)
+        consumer.seek(partition, origin_offset)
         self.thread = Thread(
             target=thread_function,
             daemon=True,
@@ -195,7 +164,8 @@ class KafkaMessageTracker:
                 "in_queue": self.to_thread,
                 "out_queue": self.from_thread,
                 "stop": stop,
-                "topic_partition": topic_partition,
+                "topic": topic,
+                "partition": partition,
                 "schemas": schemas,
                 "source_name": source_name,
             },

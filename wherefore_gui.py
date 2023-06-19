@@ -11,9 +11,11 @@ from wherefore.KafkaSecurityConfig import get_kafka_security_config
 from wherefore.KafkaTopicPartitions import get_topic_partitions
 from wherefore.KafkaMessageTracker import PartitionOffset
 from wherefore.TopicPartitionSourceTreeModel import TopicPartitionSourceTreeModel
-from PyQt5.QtCore import QSettings
 from wherefore.TreeItems import PartitionItem, SourceItem
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
+
+
+# TODO update for confluent-kafka
 
 
 def datetime_to_str(timestamp: Optional[datetime], now: datetime):
@@ -258,7 +260,9 @@ class SourceViewerApp(QtWidgets.QMainWindow):
     def onBrokerEditTimer(self):
         self.topicPartitionModel.set_kafka_broker(self.ui.brokerAddressEdit.text())
         self.topicUpdateFuture = self.thread_pool.submit(
-            get_topic_partitions, self.ui.brokerAddressEdit.text(), self.kafka_sec_config
+            get_topic_partitions,
+            self.ui.brokerAddressEdit.text(),
+            self.kafka_sec_config,
         )
 
     def onCheckForNewSources(self):
@@ -280,7 +284,9 @@ class SourceViewerApp(QtWidgets.QMainWindow):
                     self.ui.brokerLed.turn_on()
                     self.updateTopicTree(result)
                 self.topicUpdateFuture = self.thread_pool.submit(
-                    get_topic_partitions, self.ui.brokerAddressEdit.text(), self.kafka_sec_config
+                    get_topic_partitions,
+                    self.ui.brokerAddressEdit.text(),
+                    self.kafka_sec_config,
                 )
             except ValueError:
                 pass  # Ignore
@@ -290,7 +296,11 @@ class SourceViewerApp(QtWidgets.QMainWindow):
         if self.ui.enableDefaultComboBox.currentIndex() == 1:
             enable_new_partitions = False
         self.topicPartitionModel.update_topics(
-            known_topics, self.current_start, self.current_stop, self.kafka_sec_config, enable_new_partitions
+            known_topics,
+            self.current_start,
+            self.current_stop,
+            self.kafka_sec_config,
+            enable_new_partitions,
         )
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:

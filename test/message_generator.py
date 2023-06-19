@@ -11,7 +11,6 @@ from streaming_data_types import (
     serialise_f144,
     serialise_hs00,
     serialise_hs01,
-    serialise_ndar,
     serialise_ns10,
     serialise_pl72,
     serialise_rf5k,
@@ -104,12 +103,19 @@ list_of_serialisers = [
     ),
     lambda name, time: serialise_wrdn(name, "some_job_id", False, "some_file_name.hdf"),
     lambda name, time: serialise_ADAr(
-        name, 1234, datetime.fromtimestamp(time / 1e9), np.random.randint(0, 20, [5,10,15])
+        name,
+        1234,
+        datetime.fromtimestamp(time / 1e9),
+        np.random.randint(0, 20, [5, 10, 15]),
     ),
     # lambda name, time: serialise_ndar(id=name, dims=[2,2], data_type=3, data=[1,2,3,4]),
     lambda name, time: dumps({"name": name, "time": time}).encode("utf-8"),
-    lambda name, time: serialise_senv(name, 3, datetime.fromtimestamp(time/1e9), 10, 111, np.arange(50)),
-    lambda name, time: serialise_se00(name, 3, datetime.fromtimestamp(time/1e9), 10, 111, np.arange(50)),
+    lambda name, time: serialise_senv(
+        name, 3, datetime.fromtimestamp(time / 1e9), 10, 111, np.arange(50)
+    ),
+    lambda name, time: serialise_se00(
+        name, 3, datetime.fromtimestamp(time / 1e9), 10, 111, np.arange(50)
+    ),
 ]
 
 
@@ -128,7 +134,9 @@ def main():
         "-n", type=int, help="Number of sources to produce messages for.", default=1
     )
     args = parser.parse_args()
-    used_names = ["".join(random.choices(string.ascii_lowercase, k=9)) for i in range(args.n)]
+    used_names = [
+        "".join(random.choices(string.ascii_lowercase, k=9)) for i in range(args.n)
+    ]
     producer = KafkaProducer(bootstrap_servers=args.broker)
 
     while True:

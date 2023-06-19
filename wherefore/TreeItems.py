@@ -1,9 +1,12 @@
 from typing import List, Optional, Dict, Union
 from wherefore.KafkaMessageTracker import KafkaMessageTracker, PartitionOffset
 from concurrent.futures import ThreadPoolExecutor, Future
-from kafka.errors import NoBrokersAvailable
 from wherefore.DataSource import DataSource
+from wherefore.KafkaConsumer import NoBrokersAvailableError
 from datetime import datetime
+
+
+# TODO is NoBrokersAvailableError compatible with kafka.errors.NoBrokersAvailable?
 
 
 class RootItem:
@@ -101,7 +104,9 @@ class TopicItem:
     ):
         self._partitions.insert(
             self.get_partition_insert_location(partition),
-            PartitionItem(partition, self, broker, start, stop, security_config, enable),
+            PartitionItem(
+                partition, self, broker, start, stop, security_config, enable
+            ),
         )
 
     def child(self, row: int) -> "PartitionItem":
@@ -176,7 +181,7 @@ class PartitionItem:
                 if self._message_tracker_future.done():
                     try:
                         self._message_tracker_future.result().stop_thread()
-                    except NoBrokersAvailable:
+                    except NoBrokersAvailableError:
                         pass
                 self._message_tracker_future = None
             self.start_message_monitoring()
@@ -190,10 +195,17 @@ class PartitionItem:
         self._re_start_message_monitoring()
 
     def start_message_monitoring(self):
-        if self._broker is not None and self._broker != "" and self._enabled:
-            launch_tracker = lambda broker, topic, partition: KafkaMessageTracker(
-                broker, topic, partition, (self._start, None), self._stop, self._security_config
+        def launch_tracker(broker, topic, partition):
+            return KafkaMessageTracker(
+                broker,
+                topic,
+                partition,
+                (self._start, None),
+                self._stop,
+                self._security_config,
             )
+
+        if self._broker is not None and self._broker != "" and self._enabled:
             self._message_tracker_future = self._thread_pool.submit(
                 launch_tracker, self._broker, self._parent.name, self.partition_id
             )
@@ -207,7 +219,7 @@ class PartitionItem:
             try:
                 self._message_tracker = self._message_tracker_future.result()
                 self._message_tracker_future = None
-            except NoBrokersAvailable:
+            except NoBrokersAvailableError:
                 self.start_message_monitoring()
         elif (
             self._enabled
@@ -290,7 +302,7 @@ class PartitionItem:
                 # Note, this code will fail to stop the thread in some (corner) cases
                 try:
                     self._message_tracker_future.result().stop_thread()
-                except NoBrokersAvailable:
+                except NoBrokersAvailableError:
                     pass
             self._message_tracker_future = None
             if self._message_tracker is not None:
@@ -302,7 +314,13 @@ class PartitionItem:
 
 
 class SourceItem:
-    def __init__(self, source_name: str, source_type: str, parent: PartitionItem, reference_msg: Optional[bytes] = None):
+    def __init__(
+        self,
+        source_name: str,
+        source_type: str,
+        parent: PartitionItem,
+        reference_msg: Optional[bytes] = None,
+    ):
         super().__init__()
         self._source_name = source_name
         self._source_type = source_type
