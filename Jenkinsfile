@@ -34,13 +34,9 @@ builders = pipeline_builder.createBuilders { container ->
   } // stage
 
   pipeline_builder.stage("${container.key}: Static Analysis") {
-    // E203 formatting handled by black
-    // E501 formatting handled by black
-    // W503 complains about splitting if across lines which conflicts with black
-    // W605 invalid escape sequence '\d'
     container.sh """
       cd ${pipeline_builder.project}
-      python -m flake8 --ignore=E203,E501,W503,W605 test/ wherefore/ *.py --exclude=WhereforeGUI.py
+      python -m flake8
     """
   } // stage
 

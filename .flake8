@@ -1,0 +1,7 @@
+[flake8]
+exclude = WhereforeGUI.py, .git, __pycache__, venv
+# E203 formatting handled by black
+# E501 formatting handled by black
+# W503 complains about splitting if across lines which conflicts with black
+# W605 invalid escape sequence '\d'
+extend-ignore = E203, E501, W503, W605
