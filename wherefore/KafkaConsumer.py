@@ -52,11 +52,11 @@ class KafkaConsumer:
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
-        r = []
+        result = []
         for m in msgs:
-            r.append(Message(m.value(), m.timestamp()[1] / 1e3, m.offset()))
+            result.append(Message(m.value(), m.timestamp()[1] / 1e3, m.offset()))
 
-        return r
+        return result
 
     def beginning_offset(self, topic: str, partition: int) -> int:
         """
@@ -81,10 +81,10 @@ class KafkaConsumer:
         return offsets[1]
 
     def _get_offsets(self, topic: str, partition: int):
-        tp = TopicPartition(topic, partition)
+        topic_partition = TopicPartition(topic, partition)
 
         try:
-            offsets = self._consumer.get_watermark_offsets(tp)
+            offsets = self._consumer.get_watermark_offsets(topic_partition)
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
@@ -97,12 +97,12 @@ class KafkaConsumer:
         :return: Set of topic names.
         """
         try:
-            md = self._consumer.list_topics()
+            metadata = self._consumer.list_topics()
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
         topics = set()
-        for k in md.topics.keys():
+        for k in metadata.topics.keys():
             topics.add(k)
 
         return topics
@@ -115,17 +115,17 @@ class KafkaConsumer:
         :return: Set of partitions for topic.
         """
         try:
-            md = self._consumer.list_topics()
+            metadata = self._consumer.list_topics()
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
         try:
-            tmd = md.topics[topic]
+            topic_metadata = metadata.topics[topic]
         except KeyError:
             return None
 
         partitions = set()
-        for k in tmd.partitions.keys():
+        for k in topic_metadata.partitions.keys():
             partitions.add(k)
 
         return partitions
@@ -137,10 +137,10 @@ class KafkaConsumer:
         :param topic: Topic name.
         :param partitions: List of partitions.
         """
-        tps = [TopicPartition(topic, p) for p in partitions]
+        topic_partitions = [TopicPartition(topic, p) for p in partitions]
 
         try:
-            self._consumer.assign(tps)
+            self._consumer.assign(topic_partitions)
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
@@ -152,29 +152,29 @@ class KafkaConsumer:
         :return: Dict with partitions and offsets (None if timestamp is after last message).
         """
         try:
-            a = self._consumer.assignment()
+            assigned_partitions = self._consumer.assignment()
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
-        tps = []
-        for tp in a:
+        topic_partitions = []
+        for tp in assigned_partitions:
             if tp.partition in partitions_and_times:
                 tp.offset = partitions_and_times[tp.partition]
-                tps.append(tp)
+                topic_partitions.append(tp)
 
         try:
-            oft = self._consumer.offsets_for_times(tps)
+            topic_partition_offsets = self._consumer.offsets_for_times(topic_partitions)
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
-        r = {}
-        for tp in oft:
+        result = {}
+        for tp in topic_partition_offsets:
             if tp.offset > 0:
-                r[tp.partition] = tp.offset
+                result[tp.partition] = tp.offset
             else:
-                r[tp.partition] = None
+                result[tp.partition] = None
 
-        return r
+        return result
 
     def seek(self, partition: int, offset: int):
         """
@@ -184,13 +184,13 @@ class KafkaConsumer:
         :param offset: Offset.
         """
         try:
-            a = self._consumer.assignment()
+            assigned_partitions = self._consumer.assignment()
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
         found = False
-        for tp in a:
-            if tp.partition == partition:
+        for topic_partition in assigned_partitions:
+            if topic_partition.partition == partition:
                 found = True
                 break
 
@@ -199,10 +199,10 @@ class KafkaConsumer:
                 f"Partition {partition} not found in consumer assignment"
             )
 
-        tp.offset = offset
+        topic_partition.offset = offset
 
         try:
-            self._consumer.seek(tp)
+            self._consumer.seek(topic_partition)
         except KafkaException as e:
             self._raise_from_kafka_exception(e)
 
