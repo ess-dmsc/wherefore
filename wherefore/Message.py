@@ -24,6 +24,7 @@ from streaming_data_types import (
     deserialise_tdct,
     deserialise_wrdn,
     deserialise_x5f2,
+    deserialise_da00,
 )
 from wherefore.MonitorMessage import MonitorMessage
 from datetime import datetime, timezone
@@ -279,6 +280,14 @@ def se00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
         f"Nr of elements: {len(message.values)}",
     )
 
+def da00_extractor(data: bytes) -> Tuple[str, datetime | None, str]:
+    message = deserialise_da00(data)
+    return (
+        message.source_name,
+        datetime.fromtimestamp(message.timestamp_ns / 1e9, tz=timezone.utc),
+        f"{len(message.data)} Variables: {','.join(x.name for x in message.data)}",
+    )
+
 
 TYPE_EXTRACTOR_MAP = {
     "6s4t": s_6s4t_extractor,
@@ -304,17 +313,22 @@ TYPE_EXTRACTOR_MAP = {
     "f144": f144_extractor,
     "se00": se00_extractor,
     "al00": al00_extractor,
+    "da00": da00_extractor,
 }
+
+
+def unknown_extractor(name: str):
+    def named_extractor(data: bytes) -> Tuple[str, datetime | None, str]:
+        return f"Unknown {name} source", None, f"No extractor for {name} (yet)"
+
+    return named_extractor
 
 
 def extract_message_info(message_data: bytes) -> Tuple[str, str, datetime, str]:
     message_type = get_schema(
         message_data
     )  # TODO add error handling for messages too short
-    try:
-        extractor = TYPE_EXTRACTOR_MAP[message_type]
-    except KeyError:
-        return "Unknown", "Unknown", None, "No data"
+    extractor = TYPE_EXTRACTOR_MAP.get(message_type, unknown_extractor(message_type))
     try:
         source, timestamp, display_message = extractor(message_data)
         source = "".join(letter for letter in source if letter in string.printable)
