@@ -280,7 +280,8 @@ def se00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
         f"Nr of elements: {len(message.values)}",
     )
 
-def da00_extractor(data: bytes) -> Tuple[str, datetime | None, str]:
+
+def da00_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
     message = deserialise_da00(data)
     return (
         message.source_name,
@@ -318,7 +319,7 @@ TYPE_EXTRACTOR_MAP = {
 
 
 def unknown_extractor(name: str):
-    def named_extractor(data: bytes) -> Tuple[str, datetime | None, str]:
+    def named_extractor(data: bytes) -> Tuple[str, Optional[datetime], str]:
         return f"Unknown {name} source", None, f"No extractor for {name} (yet)"
 
     return named_extractor
