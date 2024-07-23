@@ -1,4 +1,4 @@
 ConfigArgParse == 1.5.3
-confluent-kafka >= 2.1.1
+confluent-kafka < 2.5
 ess-streaming-data-types >= 0.26.1
 PyQt5 >= 5.14.1
