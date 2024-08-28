@@ -67,7 +67,28 @@ As of this commit, *wherefore* is aware of the following flatbuffer schemas (fro
 * tdct
 * wrdn
 * x5f2
-
  
  Any other schema or non-flatbuffer message will be listed as "Unknown".
- 
+
+## Developer information
+
+### Installing development dependencies
+
+Development dependencies (including all runtime dependencies) can be installed by using the following command
+
+```
+pip install -r requirements-dev.txt
+```
+
+### Updating dependencies
+
+The `requirements.txt` and `requirements-dev.txt` files are generated using
+[pip-tools](https://pip-tools.readthedocs.io), which produces a full list of
+pinned versions generated from the dependencies declared in `pyproject.toml`.
+
+To generate or update the complete list of dependencies:
+
+1. Activate your local virtual environment and make sure you have pip and pip-tools installed: `pip install -U pip pip-tools`
+1. Generate requirements.txt: `pip-compile -v --resolver=backtracking -o requirements.txt pyproject.toml`
+1. Generate requirements-dev.txt: `pip-compile -v --resolver=backtracking --extra dev -o requirements-dev.txt pyproject.toml`
+

@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wherefore"
+version = "1.0.0"
+urls = {homepage="https://github.com/ess-dmsc/wherefore", repository="https://github.com/ess-dmsc/wherefore"}
+license = { file="LICENSE" }
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "ConfigArgParse",
+    "confluent-kafka>=2.1.1,<2.5",
+    "ess-streaming-data-types>=0.26.1",
+    "PyQt5>=5.14.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pip-tools",
+    "black",
+    "flake8",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.setuptools.packages.find]
+include=["wherefore"]
+
+[tool.black]
+exclude = '/(venv*|.tox)'
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+ignore = ["E501", "E203", "E402", "W503", "Q000", "W293", "W605"]
+# E501 & E203: Formatting handled by Black
+# E402 complains about imports not being at the top
+# W503 complains about splitting if across lines which conflicts with Black
+# Q000 complains about using "" and not '' which conflicts with Black
+# W293 blank lines with whitespace, conflicts with Black in doc comments
+# W605 invalid escape sequence '\d'
+exclude = ["WhereforeGUI.py", "venv"]
+
+[tool.coverage.run]
+branch = true
+source = ["wherefore"]
+
+[tool.coverage.report]
+show_missing = true
