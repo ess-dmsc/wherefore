@@ -1,3 +1,4 @@
+wherefore.egg-info/
 .coverage
 *.pyc
 venv

@@ -78,12 +78,12 @@ class SourceViewerApp(QtWidgets.QMainWindow):
         self.topicPartitionModel = TopicPartitionSourceTreeModel()
         self.config = QSettings("ESS", "Wherefore")
         self.setup(kafka_config_file)
-        self.current_start: Union[
-            int, datetime, PartitionOffset
-        ] = self.getStartCondition()
-        self.current_stop: Union[
-            int, datetime, PartitionOffset
-        ] = self.getStopCondition()
+        self.current_start: Union[int, datetime, PartitionOffset] = (
+            self.getStartCondition()
+        )
+        self.current_stop: Union[int, datetime, PartitionOffset] = (
+            self.getStopCondition()
+        )
 
     def setup(self, kafka_config_file):
         import WhereforeGUI
