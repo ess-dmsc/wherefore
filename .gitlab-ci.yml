@@ -1,0 +1,45 @@
+stages:
+  - dependencies
+  - formatting
+  - static_analysis
+  - test
+
+variables:
+  CONAN_USER: "ess-dmsc"
+  CONAN_PKG_CHANNEL: "stable"
+  PROJECT_NAME: "wherefore"
+
+default:
+  image: "registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:12.3.0"
+  before_script:
+    - /usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x
+    - python --version
+    - python -m pip install --user --upgrade pip
+
+dependencies:
+  stage: dependencies
+  script:
+    - python -m pip install --user -r requirements-dev.txt
+
+formatting:
+  stage: formatting
+  script:
+    - cd $PROJECT_DIR
+    - python -m black --check .
+
+static_analysis:
+  stage: static_analysis
+  script:
+    - cd $PROJECT_DIR
+    - python -m flake8
+
+test:
+  stage: test
+  script:
+    - cd $PROJECT_DIR
+    - python -m pytest --cov --cov-report=html --cov-report=term .
+    - tar czf htmlcov.tar.gz htmlcov
+  artifacts:
+    paths:
+      - htmlcov.tar.gz
+
