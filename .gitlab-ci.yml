@@ -16,8 +16,8 @@ default:
   image: "registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:12.3.0"
   before_script:
     - /usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x
-    - python --version
-    - python -m pip install --user --upgrade pip
+    - python3 --version
+    - python3 -m pip install --user --upgrade pip
 
 dependencies:
   stage: dependencies
