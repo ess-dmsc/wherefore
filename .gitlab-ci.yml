@@ -1,55 +1,29 @@
 stages:
-  - dependencies
-  - formatting
-  - static_analysis
-  - test
+  - build_and_test
 
-variables:
-  CONAN_USER: "ess-dmsc"
-  CONAN_PKG_CHANNEL: "stable"
-  PROJECT_NAME: "wherefore"
+tags:
+  - dc-zone
+  - docker
+image: "registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:12.3.0"
 
-default:
+build_and_test:
+  stage: build_and_test
   tags:
     - dc-zone
     - docker
-  image: "registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:12.3.0"
-
-dependencies:
-  stage: dependencies
   script:
+    - echo "Running dependencies stage"
     - source /opt/rh/rh-python38/enable
     - python3.8 --version
     - python3.8 -m pip install --user --upgrade pip
     - python3.8 -m pip install --user -r requirements-dev.txt
-  artifacts:
-    paths:
-      - /path/to/your/virtualenv
-
-formatting:
-  stage: formatting
-  script:
-    - source /opt/rh/rh-python38/enable
+    - echo "Checking Formatting..."
     - python3.8 -m black --check .
-  dependencies:
-    - dependencies
-
-static_analysis:
-  stage: static_analysis
-  script:
-    - source /opt/rh/rh-python38/enable
+    - echo "Checking Static Analysis..."
     - python3.8 -m flake8
-  dependencies:
-    - dependencies
-
-test:
-  stage: test
-  script:
-    - source /opt/rh/rh-python38/enable
+    - echo "Running tests"
     - python3.8 -m pytest --cov --cov-report=html --cov-report=term .
     - tar czf htmlcov.tar.gz htmlcov
   artifacts:
     paths:
       - htmlcov.tar.gz
-  dependencies:
-    - dependencies
