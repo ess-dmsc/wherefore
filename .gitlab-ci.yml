@@ -25,7 +25,7 @@ dependencies:
     - dc-zone
     - docker
   script:
-    - python -m pip install --user -r requirements-dev.txt
+    - python3.8 -m pip install --user -r requirements-dev.txt
 
 formatting:
   stage: formatting
@@ -33,8 +33,7 @@ formatting:
     - dc-zone
     - docker
   script:
-    - cd $PROJECT_DIR
-    - python -m black --check .
+    - python3.8 -m black --check .
 
 static_analysis:
   stage: static_analysis
@@ -42,8 +41,7 @@ static_analysis:
     - dc-zone
     - docker
   script:
-    - cd $PROJECT_DIR
-    - python -m flake8
+    - python3.8 -m flake8
 
 test:
   stage: test
@@ -51,8 +49,7 @@ test:
     - dc-zone
     - docker
   script:
-    - cd $PROJECT_DIR
-    - python -m pytest --cov --cov-report=html --cov-report=term .
+    - python3.8 -m pytest --cov --cov-report=html --cov-report=term .
     - tar czf htmlcov.tar.gz htmlcov
   artifacts:
     paths:
