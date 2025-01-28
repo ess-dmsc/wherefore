@@ -18,8 +18,9 @@ build_and_test:
     - python3.8 -m black --check .
     - echo "Checking Static Analysis..."
     - python3.8 -m flake8
-    - echo "Running tests"
+    - echo "Running tests..."
     - python3.8 -m pytest --cov --cov-report=html --cov-report=term .
+    - echo "Packaging test results artifacts..."
     - tar czf htmlcov.tar.gz htmlcov
   artifacts:
     paths:
