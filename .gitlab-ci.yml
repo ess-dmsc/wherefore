@@ -14,17 +14,16 @@ default:
     - dc-zone
     - docker
   image: "registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:12.3.0"
-  before_script:
-    - source /opt/rh/rh-python38/enable
-    - python3.8 --version
-    - python3.8 -m pip install --user --upgrade pip
-
+  
 dependencies:
   stage: dependencies
   tags:
     - dc-zone
     - docker
   script:
+    - source /opt/rh/rh-python38/enable
+    - python3.8 --version
+    - python3.8 -m pip install --user --upgrade pip
     - python3.8 -m pip install --user -r requirements-dev.txt
 
 formatting:
@@ -33,6 +32,7 @@ formatting:
     - dc-zone
     - docker
   script:
+    - source /opt/rh/rh-python38/enable
     - python3.8 -m black --check .
 
 static_analysis:
@@ -41,6 +41,7 @@ static_analysis:
     - dc-zone
     - docker
   script:
+    - source /opt/rh/rh-python38/enable
     - python3.8 -m flake8
 
 test:
@@ -49,6 +50,7 @@ test:
     - dc-zone
     - docker
   script:
+    - source /opt/rh/rh-python38/enable
     - python3.8 -m pytest --cov --cov-report=html --cov-report=term .
     - tar czf htmlcov.tar.gz htmlcov
   artifacts:
