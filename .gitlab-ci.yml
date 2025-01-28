@@ -15,7 +15,7 @@ default:
     - docker
   image: "registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:12.3.0"
   before_script:
-    - /usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x
+    - source /opt/rh/rh-python38/enable
     - python3.8 --version
     - python3.8 -m pip install --user --upgrade pip
 
